@@ -19,13 +19,10 @@ public class ChannelController implements Runnable {
 
 
     public ChannelController(int port, Peer peer) {
-        try{
-            this.port = port;
-            this.peer = peer;
-        } catch(UnknownHostException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        } 
+        
+        this.port = port;
+        this.peer = peer;
+        start();
     }
 
     public void start() {

@@ -36,7 +36,6 @@ public class Peer implements RemoteInterface {
         this.protocolVersion = protocolVersion;
         peerId = id;
         System.out.println("ID: " + peerId);
-        this.address = InetAddress.getLocalHost();
         this.threadExec = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(10000);
         System.out.println("--- Created Threads ---");
 
@@ -45,6 +44,30 @@ public class Peer implements RemoteInterface {
         }
         else {
             storage = new FileStorage();
+        }
+
+        //set the type of trust store
+        System.setProperty("javax.net.ssl.trustStoreType","JKS");
+
+        //set the password with which the truststore is encripted
+        System.setProperty("javax.net.ssl.trustStorePassword", "123456");
+
+        //set the name of the trust store containing the server's public key and certificate           
+        System.setProperty("javax.net.ssl.trustStore", "keys/truststore");
+
+        //set the password with which the client keystore is encripted
+        System.setProperty("javax.net.ssl.keyStorePassword","123456");
+
+        //set the name of the keystore containing the client's private and public keys
+        System.setProperty("javax.net.ssl.keyStore","keys/keystore");
+
+        try {
+            this.address = InetAddress.getLocalHost();
+            System.out.println("ADDRESS: " + this.address);
+        }
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
 
         //this.TCPport = 6000 + peerId;
@@ -227,7 +250,7 @@ public class Peer implements RemoteInterface {
             
         //try {
             byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
-            this.threadExec.execute(new ThreadSendMessages(this.TCPChannel, headerBytes));
+            this.threadExec.execute(new ThreadSendMessages(this.TCPChannel, headerBytes, this.address));
         /*} catch(UnsupportedEncodingException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();

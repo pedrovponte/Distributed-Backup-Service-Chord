@@ -33,7 +33,7 @@ public class Utils {
     public static final char[] DOUBLE_CRLF = { 0xD, 0xA, 0xD, 0xA };
     public static final int THREADS_PER_CHANNEL = 20;
 
-    public static String hash(String originalString) {
+    /*public static String hash(String originalString) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] encodedHash = digest.digest(originalString.getBytes(StandardCharsets.UTF_8));
@@ -248,6 +248,6 @@ public class Utils {
         } catch(IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
 }
