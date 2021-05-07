@@ -35,6 +35,10 @@ public class ChordChannel implements Runnable {
                 this.dis.read(message);
 
                 String messageStr = new String(message, StandardCharsets.ISO_8859_1);
+
+                // handle message
+
+                socket.close();
             }
             catch (Exception e) {
                 System.err.println(e.getMessage());

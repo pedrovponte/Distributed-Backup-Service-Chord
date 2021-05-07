@@ -22,6 +22,7 @@ public class ChordNode {
     private NodeInfo predecessor;
     private ScheduledThreadPoolExecutor threadExec;
     private ChordChannel channel;
+    private InetSocketAddress localAddress;
 
     public ChordNode(int peerId, int port) {
         this.peerId = peerId;
@@ -34,9 +35,10 @@ public class ChordNode {
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
-        InetSocketAddress localAddress = new InetSocketAddress(ipAddress, port);
+
+        this.localAddress = new InetSocketAddress(ipAddress, port);
         this.id = createHashSocketAddress(localAddress.toString());
-        this.nodeInfo = new NodeInfo(this.id, localAddress);
+        this.nodeInfo = new NodeInfo(this.id, this.localAddress);
         this.fingerTable = new AtomicReferenceArray<>(M);
         this.successors = new ArrayList<>();
         this.threadExec = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(5); //serao suficientes ou serao muitas?
@@ -71,6 +73,21 @@ public class ChordNode {
     }
 
 
+    // first node to enter in the ring needs to create that
+    public void create() {
+        this.predecessor = null;
+        this.fingerTable.set(0, this.nodeInfo);
+        this.successors.set(0, this.nodeInfo);
+        // call threads that will search/ actualize successors, fingers, predecessor, etc...
+    }
+
+    public void join(InetSocketAddress address) {
+        // if contact is other node (join ring), try to contact that node
+		// (contact will never be null)
+        if(address != null && !address.equals(this.localAddress)) {
+            // send message to find successor
+        }
+    }
 
 
     public int createHashSocketAddress(String socketAddress) {

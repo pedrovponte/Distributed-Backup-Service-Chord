@@ -71,6 +71,7 @@ public class ChannelController implements Runnable {
             socket.connect(socketAddress, 5000);
             OutputStream out = socket.getOutputStream();
             out.write(message);
+            System.out.println("SEND MESSAGE");
             socket.close();
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -90,10 +91,10 @@ public class ChannelController implements Runnable {
         while(true) {
             try {
                 SSLSocket channel  = (SSLSocket) serverSocket.accept();
-                InputStream is = channel.getInputStream();
+                DataInputStream dis = new DataInputStream(channel.getInputStream());
                 
                 // receive a packet
-                int bytesRead = is.read(buf, 0, buf.length);
+                int bytesRead = dis.read(buf, 0, buf.length);
                 byte[] received = Arrays.copyOf(buf, bytesRead);
 
                 //print received message

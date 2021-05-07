@@ -107,6 +107,7 @@ public class Peer implements RemoteInterface {
 
     public static void main(String[] args) {
 
+        // add two arguments (ip address and port to connect to chord ring in case it exists. Otherwise, create a new one)
         if (args.length != 4) {
             System.out.println(
                     "Usage: Peer <protocol_version> <peer_id> <service_access_point> <TCP_port>");
