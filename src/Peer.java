@@ -53,13 +53,13 @@ public class Peer implements RemoteInterface {
         System.setProperty("javax.net.ssl.trustStorePassword", "123456");
 
         //set the name of the trust store containing the server's public key and certificate           
-        System.setProperty("javax.net.ssl.trustStore", "keys/truststore");
+        System.setProperty("javax.net.ssl.trustStore", "../keys/truststore");
 
         //set the password with which the client keystore is encripted
         System.setProperty("javax.net.ssl.keyStorePassword","123456");
 
         //set the name of the keystore containing the client's private and public keys
-        System.setProperty("javax.net.ssl.keyStore","keys/keystore");
+        System.setProperty("javax.net.ssl.keyStore","../keys/keystore");
 
         try {
             this.address = InetAddress.getLocalHost();
