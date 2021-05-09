@@ -3,11 +3,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.management.RuntimeErrorException;
 
 
 public class FileManager implements java.io.Serializable {

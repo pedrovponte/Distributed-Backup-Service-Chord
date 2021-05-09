@@ -11,11 +11,8 @@ public class ThreadSendMessages implements Runnable {
         this.address = address;
     }
 
-
     @Override
     public void run() {
         this.channel.sendMessage(this.message, this.address);
     }
-
-    
 }

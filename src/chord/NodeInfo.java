@@ -1,3 +1,5 @@
+package chord;
+
 import java.net.InetSocketAddress;
 
 public class NodeInfo {
