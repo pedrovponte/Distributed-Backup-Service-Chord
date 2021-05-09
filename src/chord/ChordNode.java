@@ -1,17 +1,11 @@
-import java.io.DataOutputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+package chord;
+
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-
-import org.graalvm.compiler.nodeinfo.NodeInfo;
-
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.*;
@@ -59,10 +53,6 @@ public class ChordNode {
         return this.nodeInfo;
     }
 
-    public NodeInfo getSuccessor() {
-        return this.successors.get(0);
-    }
-
 
     public void initFingerTable() {
         for(int i = 0; i < M; i++) {
@@ -93,37 +83,13 @@ public class ChordNode {
     }
 
     public void join(InetSocketAddress address) {
-        // send message to find successor
-        byte[] message = this.channel.constructJoinMessage(this.id);
-
-        this.channel.sendMessage(address, message);
-        
-    }
-
-
-    public NodeInfo findSuccessor(InetSocketAddress address, int nodeId) {
-        if(compareNodeIds(this.id, nodeId, this.fingerTable.get(0).getKey()) || nodeId == this.fingerTable.get(0).getKey()) {
-            return this.fingerTable.get(0);
-        }
-        else {
-            // procurar closest precedind node e verificar se os ids são iguais
-
-            // senao, enviar mensagem FINDSUCC atraves do channel para procurar o sucessor
+        // if contact is other node (join ring), try to contact that node
+		// (contact will never be null)
+        if(address != null && !address.equals(this.localAddress)) {
+            // send message to find successor
         }
     }
 
-
-    public boolean compareNodeIds(int lower, int test, int upper) {
-        if(lower < upper) {
-            return lower < test && test < upper;
-        }
-        else if(lower == upper) {
-            return true;
-        }
-        else {
-            return test > lower || test < upper;
-        }
-    }
 
     public int createHashSocketAddress(String socketAddress) {
         try{

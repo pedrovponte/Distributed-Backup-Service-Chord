@@ -1,6 +1,12 @@
-
-src/peer_1/
-
-src/peer_2/
-
+# Output
+out
+build
+bin
 *.class
+
+# Config
+.idea
+*.iml
+
+# Folders
+storage/peer*/

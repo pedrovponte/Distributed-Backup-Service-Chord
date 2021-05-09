@@ -1,3 +1,5 @@
+package broadcast;
+
 import java.net.InetAddress;
 
 public class ThreadSendMessages implements Runnable {
@@ -11,11 +13,8 @@ public class ThreadSendMessages implements Runnable {
         this.address = address;
     }
 
-
     @Override
     public void run() {
         this.channel.sendMessage(this.message, this.address);
     }
-
-    
 }

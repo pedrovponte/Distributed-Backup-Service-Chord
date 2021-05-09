@@ -1,3 +1,5 @@
+package broadcast.messages;
+import utils.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.*;
@@ -7,7 +9,7 @@ import java.util.Arrays;
 
 
 public class Message {
-    /*private byte[] body;
+    private byte[] body;
     private MessageHeader header;
 
     public Message(String message) {
@@ -104,5 +106,5 @@ public class Message {
             stream.write(body);
 
         return stream.toByteArray();
-    }*/
+    }
 }

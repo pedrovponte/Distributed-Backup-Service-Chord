@@ -1,5 +1,6 @@
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+package storage;
+
+import peer.Peer;
 
 public class ManageReceivedMessages implements Runnable {
 
@@ -15,7 +16,7 @@ public class ManageReceivedMessages implements Runnable {
     // checks the message type and then creates a new thread to treat that message
     public void run() {
         System.out.println("INSIDE MESSAGE MANAGER");
-        // message: <Version> <MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
+        // message: <Version> <broadcast.messages.MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
         /*String[] messageStr = new String(this.message).split(" ");
         // System.out.println("Manager message: " + messageStr);
         switch (messageStr[1]){

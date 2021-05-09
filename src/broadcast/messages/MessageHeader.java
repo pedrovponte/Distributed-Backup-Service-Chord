@@ -1,3 +1,6 @@
+package broadcast.messages;
+
+import utils.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -6,7 +9,7 @@ import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
 public class MessageHeader {
-    /*private int chunkNo;
+    private int chunkNo;
     private int senderId;
     private int replicationDeg;
     private String fileId;
@@ -130,5 +133,5 @@ public class MessageHeader {
 
     public MessageType getMessageType() {
         return messageType;
-    }*/
+    }
 }

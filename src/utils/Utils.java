@@ -1,18 +1,13 @@
+package utils;
+
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousFileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,7 +28,7 @@ public class Utils {
     public static final char[] DOUBLE_CRLF = { 0xD, 0xA, 0xD, 0xA };
     public static final int THREADS_PER_CHANNEL = 20;
 
-    /*public static String hash(String originalString) {
+    public static String hash(String originalString) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] encodedHash = digest.digest(originalString.getBytes(StandardCharsets.UTF_8));
@@ -53,8 +48,6 @@ public class Utils {
         }
     }
 
-
-
     public static String readFile(String filePath) {
         StringBuilder data = new StringBuilder();
 
@@ -73,7 +66,6 @@ public class Utils {
 
         return data.toString();
     }
-
 
     public static String byteArrayToString(byte[] byteArray) {
         return new String(byteArray, StandardCharsets.ISO_8859_1);
@@ -122,8 +114,6 @@ public class Utils {
         return (double)getFileSizeBytes(filepath) / 1000;
     }
 
-
-
     public static double getPeerFolderSpace(int senderId) {
         double result = 0;
         final File folder = new File("../../resources/peer" + senderId);
@@ -152,102 +142,4 @@ public class Utils {
         }
         return result;
     }
-    public static HashMap<String, List<Chunk>> getBackedUp(int senderId) throws FileNotFoundException {
-        HashMap<String, List<Chunk>> map=new HashMap<String,List<Chunk>>();
-        File file= new File("../../resources/peer"+senderId+"/replication_degrees.txt");
-        if(!file.exists())
-            return map;
-        Scanner reader = new Scanner(file);
-        while(reader.hasNextLine())
-        {
-            String data = reader.nextLine();
-            String [] line=data.split(" ");
-            if(map.containsKey(line[1]))
-            {
-                List<Chunk> list=map.get(line[1]);
-                list.add(new Chunk(Integer.parseInt(line[2]), Integer.parseInt(line[3]), Integer.parseInt(line[4]), line[0]));
-                map.replace(line[1],list);
-            }
-            else
-            {
-                List<Chunk> aux= new ArrayList<>();
-                aux.add(new Chunk(Integer.parseInt(line[2]), Integer.parseInt(line[3]), Integer.parseInt(line[4]), line[0]));
-                map.put(line[1],aux);
-            }
-        }
-
-        return map;
-    }
-
-    public static boolean hasStored(int senderId,String fileId, int chunkNo)
-    {
-        List<Chunk> list = new ArrayList<Chunk>();
-
-        final File folder = new File("../../resources/peer" + senderId);
-        final File[] files = folder.listFiles((dir, name) -> {
-            String regex = "[a-zA-Z_0-9]{64}\\([0-9]*\\)";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(name);
-            return matcher.find();
-        });
-
-        for (final File file : files) {
-            Path path = Paths.get("../../resources/peer"+senderId+"/"+file.getName());
-
-            double size = 0;
-            try {
-                size = Files.size(path);
-            } catch(IOException e) { e.printStackTrace(); }
-            size = size/1000;
-
-            list.add(new Chunk(file.getName().split("\\(")[0], Integer.parseInt(file.getName().split("\\(")[1].split("\\)")[0]), size));
-        }
-
-        return list.contains(new Chunk(fileId,chunkNo));
-    }
-
-    public static List<Chunk> getStored(int senderId)
-    {
-        List<Chunk> list = new ArrayList<>();
-
-        final File folder = new File("../../resources/peer" + senderId);
-        final File[] files = folder.listFiles((dir, name) -> {
-            String regex = "[a-zA-Z_0-9]{64}\\([0-9]*\\)";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(name);
-            return matcher.find();
-        });
-
-
-        for (final File file : files) {
-            System.out.println("Filename: " + file.getName());
-            Path path = Paths.get("../../resources/peer"+senderId+"/"+file.getName());
-
-            double size = 0;
-            try {
-                size = Files.size(path);
-            } catch(IOException e) { e.printStackTrace(); }
-            size = size/1000;
-
-            list.add(new Chunk(file.getName().split("\\(")[0], Integer.parseInt(file.getName().split("\\(")[1].split("\\)")[0]), size));
-        }
-
-        return list;
-    }
-
-    public static void writeStored(int senderId, List<Chunk> list)
-    {
-        String path="../../resources/peer" + senderId+"/stored_chunks.txt";
-        try {
-            FileWriter fileWriter = new FileWriter(path);
-            for (Chunk chunk:list)
-            {
-                fileWriter.write(chunk.fileId+" "+chunk.id+" "+chunk.size+" "+chunk.repDeg);
-            }
-            fileWriter.close();
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }*/
-
 }

@@ -1,3 +1,5 @@
+import peer.RemoteInterface;
+
 import java.io.File;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
