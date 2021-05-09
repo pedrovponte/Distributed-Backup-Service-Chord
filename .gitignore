@@ -10,3 +10,5 @@ bin
 
 # Folders
 storage/peer*/
+
+src/peer_*/
