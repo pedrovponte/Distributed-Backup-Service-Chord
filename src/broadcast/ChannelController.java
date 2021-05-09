@@ -1,10 +1,10 @@
+package broadcast;
+
+import peer.Peer;
+
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -47,12 +47,8 @@ public class ChannelController implements Runnable {
         }  
         catch(IOException e) {  
             System.out.println("Server - Failed to create SSLServerSocket");  
-            e.getMessage();  
-            return;  
+            e.printStackTrace();
         }
-      
-      
-        
     }
 
 
@@ -80,8 +76,8 @@ public class ChannelController implements Runnable {
     }
 
 
+    @SuppressWarnings("InfiniteLoopStatement")
     public void run() {
-
         // maximum size of a chunk is 64KBytes (body)
         // header has at least 32 bytes (fileId) + version + messageType + senderId + chunkNo + replicationDegree
         // so 65KBytes should be sufficient to receive the message
@@ -100,7 +96,7 @@ public class ChannelController implements Runnable {
                 //print received message
                 System.out.println(new String(received));
 
-                /* ManageReceivedMessages manager = new ManageReceivedMessages(this.peer, received);
+                /* storage.ManageReceivedMessages manager = new storage.ManageReceivedMessages(this.peer, received);
                     
                 // call a thread to execute the task
                 this.peer.getThreadExec().execute(manager); */

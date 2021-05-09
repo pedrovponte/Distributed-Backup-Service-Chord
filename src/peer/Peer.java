@@ -1,26 +1,23 @@
+package peer;
+
+import storage.*;
+import broadcast.*;
+
 import java.net.*;
-import java.nio.channels.Channel;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
-import java.util.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.FileSystems;
 
 public class Peer implements RemoteInterface {
     private ChannelController TCPChannel;
-    //private ChannelController MDB;
-    //private ChannelController MDR;
+    //private broadcast.ChannelController MDB;
+    //private broadcast.ChannelController MDR;
     //private TCPChannel tcpChannel;
     //private int TCPport;
     private String protocolVersion;
@@ -110,7 +107,7 @@ public class Peer implements RemoteInterface {
         // add two arguments (ip address and port to connect to chord ring in case it exists. Otherwise, create a new one)
         if (args.length != 4) {
             System.out.println(
-                    "Usage: Peer <protocol_version> <peer_id> <service_access_point> <TCP_port>");
+                    "Usage: peer.peer.Peer <protocol_version> <peer_id> <service_access_point> <TCP_port>");
             return;
         }
 
@@ -131,7 +128,7 @@ public class Peer implements RemoteInterface {
         int mdrPort = Integer.parseInt(args[8]);*/
 
         System.out.println("Protocol version: " + protocolVersion);
-        System.out.println("Peer Id: " + peerId);
+        System.out.println("peer.peer.Peer Id: " + peerId);
         System.out.println("Service Access Point: " + serviceAccessPoint);
         System.out.println("TCP Port: " + tcpPort);
         /*System.out.println("Mc port: " + mcPort);
@@ -162,7 +159,7 @@ public class Peer implements RemoteInterface {
         /*if(protocolVersion.equals("2.0")) {
             // <Version> WORKING <PeerId> <CRLF><CRLF>
             String toSend = protocolVersion + " WORKING " + peerId + " \r\n\r\n";
-            peer.getThreadExec().execute(new ThreadSendMessages(peer.getMC(), toSend.getBytes()));
+            peer.getThreadExec().execute(new broadcast.ThreadSendMessages(peer.getMC(), toSend.getBytes()));
             System.out.println("SENT: " + toSend);
         }*/
 
@@ -176,12 +173,12 @@ public class Peer implements RemoteInterface {
     }
 
 
-    /*public ChannelController getMDB() {
+    /*public broadcast.ChannelController getMDB() {
         return this.MDB;
     }
 
     
-    public ChannelController getMDR() {
+    public broadcast.ChannelController getMDR() {
         return this.MDR;
     }*/
 
@@ -231,8 +228,8 @@ public class Peer implements RemoteInterface {
     // creates multicast channels
     public void createChannels(int tcpPort) {
         this.TCPChannel = new ChannelController(tcpPort, this);
-        /*this.MDB = new ChannelController(mdbAddress, mdbPort, this);
-        this.MDR = new ChannelController(mdrAddress, mdrPort, this);*/
+        /*this.MDB = new broadcast.ChannelController(mdbAddress, mdbPort, this);
+        this.MDR = new broadcast.ChannelController(mdrAddress, mdrPort, this);*/
     }
 
 
@@ -268,7 +265,7 @@ public class Peer implements RemoteInterface {
             return;
         }
 
-        FileManager fileManager = new FileManager(path, replication, peerId);
+        storage.FileManager fileManager = new storage.FileManager(path, replication, peerId);
 
         String fileIDNew = fileManager.getFileID();
 
@@ -285,7 +282,7 @@ public class Peer implements RemoteInterface {
             storage.removeDeletedFile(fileManager.getFileID());
         }
 
-        ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
+        ArrayList<storage.Chunk> fileChunks = fileManager.getFileChunks();
 
         for(int i = 0; i < fileChunks.size(); i++) {
             // <Version> PUTCHUNK <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF><Body>
@@ -304,7 +301,7 @@ public class Peer implements RemoteInterface {
                 }
 
                 // send threads
-                this.threadExec.execute(new ThreadSendMessages(this.MDB, message));
+                this.threadExec.execute(new broadcast.ThreadSendMessages(this.MDB, message));
                 this.threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
 
                 System.out.println("SENT: "+ header);
@@ -334,7 +331,7 @@ public class Peer implements RemoteInterface {
             this.threadExec.execute(tcpChannel);
         }
 
-        ArrayList<FileManager> files = this.getStorage().getFilesStored();
+        ArrayList<storage.FileManager> files = this.getStorage().getFilesStored();
         ArrayList<String> filesNames = new ArrayList<String>();
 
         for(int i = 0; i < files.size(); i++) {
@@ -358,7 +355,7 @@ public class Peer implements RemoteInterface {
                         message = this.protocolVersion + " GETCHUNK " + peerId + " " + files.get(i).getFileID() + " " + j + " " + this.TCPport + " \r\n\r\n";
                     }
                     try {
-                        this.threadExec.execute(new ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
+                        this.threadExec.execute(new broadcast.ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
 
                         System.out.println("SENT: " + message);
                     } catch (Exception e) {
@@ -382,7 +379,7 @@ public class Peer implements RemoteInterface {
             return;
         }
         
-        ArrayList<FileManager> files = this.getStorage().getFilesStored();
+        ArrayList<storage.FileManager> files = this.getStorage().getFilesStored();
         ArrayList<String> filesNames = new ArrayList<String>();
 
         for(int i = 0; i < files.size(); i++) {
@@ -400,7 +397,7 @@ public class Peer implements RemoteInterface {
                 for(int j = 0; j < 5; j++) {
                     String message = this.protocolVersion + " DELETE " + peerId + " " + files.get(i).getFileID() + " \r\n\r\n";
                     try {
-                        this.threadExec.execute(new ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
+                        this.threadExec.execute(new broadcast.ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
 
                         System.out.println("SENT: " + message);
                     } catch (Exception e) {
@@ -442,15 +439,15 @@ public class Peer implements RemoteInterface {
         int spaceToFree = occupiedSpace - max_space;
 
         if(spaceToFree > 0) {
-            ConcurrentHashMap<String, Chunk> chunksStored = this.getStorage().getChunksStored();
-            ArrayList<Chunk> chunks = new ArrayList<>();
+            ConcurrentHashMap<String, storage.Chunk> chunksStored = this.getStorage().getChunksStored();
+            ArrayList<storage.Chunk> chunks = new ArrayList<>();
 
             for(String key : chunksStored.keySet()) {
                 chunks.add(chunksStored.get(key));
             }
 
             // descendant ordered list to start delete biggest chunks first
-            Collections.sort(chunks, Comparator.comparing(Chunk::getSize));
+            Collections.sort(chunks, Comparator.comparing(storage.Chunk::getSize));
             Collections.reverse(chunks);
 
             for(int i = 0; i < chunks.size(); i++) {
@@ -459,7 +456,7 @@ public class Peer implements RemoteInterface {
 
                 String message = this.protocolVersion + " REMOVED " + peerId + " " + chunks.get(i).getFileId() + " " + chunks.get(i).getChunkNo() + " \r\n\r\n";
                 try {
-                    this.threadExec.execute(new ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
+                    this.threadExec.execute(new broadcast.ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
 
                     System.out.println("SENT: " + message);
                 } catch (Exception e) {

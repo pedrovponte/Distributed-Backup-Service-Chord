@@ -1,3 +1,5 @@
+package storage;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,10 +63,9 @@ public class FileManager implements java.io.Serializable {
         String fileName = this.file.getName();
         String fileParent = this.file.getParent();
         long lastModifiedTime = this.file.lastModified();
-        long fileSize = this.file.length(); 
-        
-        String id = String.valueOf(this.peerId) + "__" + fileParent + "__" + fileName + "__" + String.valueOf(lastModifiedTime) + "__" + String.valueOf(fileSize);
-        return id;
+        long fileSize = this.file.length();
+
+        return this.peerId + "__" + fileParent + "__" + fileName + "__" + lastModifiedTime + "__" + fileSize;
     }
 
 
@@ -74,10 +75,10 @@ public class FileManager implements java.io.Serializable {
         try{
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] encodedHash = digest.digest(toHash.getBytes(StandardCharsets.UTF_8));
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
 
-            for(int i = 0; i < encodedHash.length; i++) {
-                String hex = Integer.toHexString(0xff & encodedHash[i]);
+            for(byte hash : encodedHash) {
+                String hex = Integer.toHexString(0xff & hash);
                 if(hex.length() == 1) {
                     buf.append('0');
                 }

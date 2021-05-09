@@ -1,5 +1,6 @@
+# 2 package depth
 all: mkdir
-	javac -d build/ src/*.java src/*/*.java
+	javac -d build/ src/*.java src/*/*.java src/*/*/*.java
 
 mkdir:
 	@mkdir -p build/
@@ -13,7 +14,7 @@ rmi:
 REP_DEG = 1
 NEW_SIZE = 0
 FILEPATH = "file.pdf"
-ACCESS_POINT = "ap14661"
+ACCESS_POINT = "1923"
 
 backup:
 	@bash scripts/backup.sh $(ACCESS_POINT) $(FILEPATH) $(REP_DEG)
