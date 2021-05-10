@@ -8,9 +8,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-
 import org.graalvm.compiler.nodeinfo.NodeInfo;
-
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
@@ -61,6 +59,7 @@ public class ChordNode {
         return this.nodeInfo;
     }
 
+
     public NodeInfo getSuccessor() {
         return this.successors.get(0);
     }
@@ -94,9 +93,10 @@ public class ChordNode {
         // call threads that will search/ actualize successors, fingers, predecessor, etc...
     }
 
+
     public void join(InetSocketAddress address) {
         // send message to find successor
-        byte[] message = this.channel.constructJoinMessage(this.id);
+        byte[] message = this.channel.constructHelloMessage(this.id);
 
         this.channel.sendMessage(address, message);
         
@@ -104,14 +104,75 @@ public class ChordNode {
 
 
     public NodeInfo findSuccessor(InetSocketAddress address, int nodeId) {
-        if(compareNodeIds(this.id, nodeId, this.fingerTable.get(0).getKey()) || nodeId == this.fingerTable.get(0).getKey()) {
+        // ask node n to find the successor of id
+        /*procedure n.findSuccessor(id) {
+            if (predecessor != nil and id in (predecessor, n]) then return n
+            else if (id in (n, successor]) then
+                return successor
+            else { // forward the query around the circle
+                m := closestPrecedingNode(id)
+                return m.findSuccessor(id)
+            }
+        }*/
+        
+        
+        if(compareNodeIds(this.nodeInfo.getNodeId(), nodeId, this.fingerTable.get(0).getNodeId()) || nodeId == this.fingerTable.get(0).getNodeId()) {
             return this.fingerTable.get(0);
         }
         else {
-            // procurar closest precedind node e verificar se os ids são iguais
+            NodeInfo n = closestPrecedingNode(nodeId);
 
-            // senao, enviar mensagem FINDSUCC atraves do channel para procurar o sucessor
+            if(this.nodeInfo.getNodeId() == n.getNodeId()) {
+                return this.nodeInfo;
+            }
+
+            byte[] message = this.channel.constructFindSuccessorMessage(nodeId, n);
+            this.channel.sendMessage(n.getSocketAddress(), message);
+            return 
         }
+    }
+
+    
+    // search the local table for the highest predecessor of nodeId
+    public NodeInfo closestPrecedingNode(int nodeId) {
+        // search locally for the highest predecessor of id
+        /*procedure closestPrecedingNode(id) {
+            for i = m downto 1 do {
+                if (finger[i] in (n, id)) then
+                    return finger[i]
+            }
+            return n
+        }*/
+
+        NodeInfo fingerNode = null;
+
+        for(int i = M - 1; i >= 0; i--) {
+            if(this.fingerTable.get(i) == null) {
+                continue;
+            }
+
+            if(compareNodeIds(this.nodeInfo.getNodeId(), this.fingerTable.get(i).getNodeId(), nodeId)) {
+                fingerNode = this.fingerTable.get(i);
+            }
+        }
+
+        if(fingerNode == null) {
+            fingerNode = this.fingerTable.get(0);
+        }
+
+        for(int j = R - 1; j >= 0; j--) {
+            if(this.successors.get(j) == null) {
+                continue;
+            }
+
+            NodeInfo succ = this.successors.get(j);
+
+            if(compareNodeIds(fingerNode.getNodeId(), succ.getNodeId(), nodeId)) {
+                return succ;
+            }
+        }
+
+        return fingerNode;
     }
 
 
@@ -126,6 +187,7 @@ public class ChordNode {
             return test > lower || test < upper;
         }
     }
+
 
     public int createHashSocketAddress(String socketAddress) {
         try{

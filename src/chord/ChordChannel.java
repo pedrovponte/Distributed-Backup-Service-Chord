@@ -11,10 +11,12 @@ public class ChordChannel implements Runnable {
     private ServerSocket serverSocket;
     private Socket socket;
     private DataInputStream dis;
+    protected final ConcurrentLinkedQueue<String[]> receivedMessages; // Queue where the received messages are stored
 
 
     public ChordChannel(ChordNode parent) {
         this.parent = parent;
+        this.receivedMessages = new ConcurrentLinkedQueue<>();
         open();
     }
 
@@ -71,28 +73,39 @@ public class ChordChannel implements Runnable {
         String[] messageStr = new String(message).split(" ");
 
         switch (messageStr[0]) {
-            case "JOIN":
-                // JOIN + nodeId + address + port
-                int newNodeId = Integer.parseInt(messageStr[1]);
-                String[] successorInfo = this.node.findSuccessor(this.parent.getNodeInfo().getSocketAddress(), newNodeId);
-
+            case "HELLO":
+                handleHelloMessage(messageStr);
                 break;
 
             case "FINDSUCC":
-
 
                 break;
         }
     }
 
-    public byte[] constructFindSuccessorMessage(int nodeId) {
-        String message = "FINDSUCC " + nodeId.toString() + "\r\n\r\n";
+    public void handleHelloMessage(String[] message) {
+        // HELLO + nodeId + address + port
+        int newNodeId = Integer.parseInt(messageStr[1]);
+        NodeInfo successorInfo = this.node.findSuccessor(this.parent.getNodeInfo().getSocketAddress(), newNodeId);
+    }
+
+    public void handleFindSuccessor(String[] message) {
+        // FINDSUCC + nodeId + address + port
+        
+    }
+
+
+    // FINDSUCC + nodeId + address + port
+    public byte[] constructFindSuccessorMessage(int nodeId, NodeInfo nodeInfo) {
+        String message = "FINDSUCC " + nodeId.toString() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
         return message.getBytes();
     }
 
+
     // JOIN + nodeId + address + port
-    public byte[] constructJoinMessage(int nodeId) {
-        String message = "JOIN " + nodeId + " " + this.parent.getNodeInfo().getIp() + " " + this.parent.getNodeInfo().getPort() + "\r\n\r\n";
+    public byte[] constructHelloMessage(int nodeId) {
+        String message = "HELLO " + nodeId + " " + this.parent.getNodeInfo().getIp() + " " + this.parent.getNodeInfo().getPort() + "\r\n\r\n";
         return nodeId.getBytes();
     }
+
 }
