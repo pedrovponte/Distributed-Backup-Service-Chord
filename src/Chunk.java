@@ -1,5 +1,3 @@
-package storage;
-
 public class Chunk implements java.io.Serializable {
     // Each chunk is identified by the pair (fileId, chunkNo)
     private String fileId;

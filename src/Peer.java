@@ -1,8 +1,3 @@
-package peer;
-
-import storage.*;
-import broadcast.*;
-
 import java.net.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -22,49 +17,44 @@ public class Peer implements RemoteInterface {
     //private int TCPport;
     private String protocolVersion;
     private static int peerId;
-    private ScheduledThreadPoolExecutor threadExec;
+    private static ScheduledThreadPoolExecutor threadExec;
     private static FileStorage storage;
     private ConcurrentHashMap<String, Integer> receivedChunkMessages;
     private ServerSocket serverSocket;
     private InetAddress address;
+    private ChordNode chordNode;
+    private int tcpPort;
+    private static Peer peer;
 
-    public Peer(String protocolVersion, int id) {
+    public Peer(String[] args) {
         //this.receivedChunkMessages = new ConcurrentHashMap<String, Integer>();
-        this.protocolVersion = protocolVersion;
-        peerId = id;
+        this.protocolVersion = args[0];
+        peerId = Integer.parseInt(args[1]);
         System.out.println("ID: " + peerId);
-        this.threadExec = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(10000);
+        threadExec = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(10000);
         System.out.println("--- Created Threads ---");
+        this.tcpPort = Integer.parseInt(args[3]);
+
+        try {
+            this.address = InetAddress.getLocalHost();
+            System.out.println("ADDRESS: " + this.address + "; PORT: " + this.tcpPort);
+        }
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+
+        createChannels(this.address.getHostAddress(), this.tcpPort);
+        System.out.println("--- TCP Channel Created ---");
+
+        execChannels();
+        System.out.println("--- Running TCP Channel --- \n\n");
 
         if(new File("peer_" + peerId + "/storage.ser").exists()) {
             deserialization();
         }
         else {
             storage = new FileStorage();
-        }
-
-        //set the type of trust store
-        System.setProperty("javax.net.ssl.trustStoreType","JKS");
-
-        //set the password with which the truststore is encripted
-        System.setProperty("javax.net.ssl.trustStorePassword", "123456");
-
-        //set the name of the trust store containing the server's public key and certificate           
-        System.setProperty("javax.net.ssl.trustStore", "../keys/truststore");
-
-        //set the password with which the client keystore is encripted
-        System.setProperty("javax.net.ssl.keyStorePassword","123456");
-
-        //set the name of the keystore containing the client's private and public keys
-        System.setProperty("javax.net.ssl.keyStore","../keys/keystore");
-
-        try {
-            this.address = InetAddress.getLocalHost();
-            System.out.println("ADDRESS: " + this.address);
-        }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
         }
 
         //this.TCPport = 6000 + peerId;
@@ -100,20 +90,43 @@ public class Peer implements RemoteInterface {
             System.out.println("Value: " + chunks.get(key));
         }
         System.out.println("Total: " + chunks.size());
+
+
+        this.chordNode = new ChordNode(this.address.getHostAddress(), this.tcpPort);
+
+        System.out.println("BEFORE IF");
+
+        try {
+            Thread.sleep(2000);
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+
+        if(args.length == 4) {
+            System.out.println("INSIDE FIRST IF");
+            chordNode.create();
+        }
+        else if(args.length == 6) {
+            chordNode.join(args[4], Integer.parseInt(args[5]));
+        }
+
+        System.out.println("AFTER IFS");
+        // chamar as atualizaçoes aqui ou no create?
     }
 
     public static void main(String[] args) {
 
         // add two arguments (ip address and port to connect to chord ring in case it exists. Otherwise, create a new one)
-        if (args.length != 4) {
+        if (args.length != 4 && args.length != 6) {
             System.out.println(
-                    "Usage: peer.peer.Peer <protocol_version> <peer_id> <service_access_point> <TCP_port>");
+                    "Usage: java peer.peer.Peer <protocol_version> <peer_id> <service_access_point> <TCP_port> <ip_address_of_other> <port_of_other>");
             return;
         }
 
         String protocolVersion = args[0];
 
-        if(!((protocolVersion.equals("1.0")) || (protocolVersion.equals("2.0")))) {
+        if(!(protocolVersion.equals("1.0"))) {
             System.out.println("Invalid protocol version: " + protocolVersion + ". Available versions: '1.0' or '2.0'.");
             return;
         }
@@ -121,24 +134,16 @@ public class Peer implements RemoteInterface {
         int peerId = Integer.parseInt(args[1]);
         String serviceAccessPoint = args[2];
         int tcpPort = Integer.parseInt(args[3]);
-        /*int mcPort = Integer.parseInt(args[4]);
-        String mdbAddress = args[5];
-        int mdbPort = Integer.parseInt(args[6]);
-        String mdrAddress = args[7];
-        int mdrPort = Integer.parseInt(args[8]);*/
 
         System.out.println("Protocol version: " + protocolVersion);
-        System.out.println("peer.peer.Peer Id: " + peerId);
+        System.out.println("Peer Id: " + peerId);
         System.out.println("Service Access Point: " + serviceAccessPoint);
         System.out.println("TCP Port: " + tcpPort);
-        /*System.out.println("Mc port: " + mcPort);
-        System.out.println("MDB address: " + mdbAddress);
-        System.out.println("MDB port: " + mdbPort);
-        System.out.println("MDR address: " + mdrAddress);
-        System.out.println("MDR port: " + mdrPort);*/
 
-        Peer peer = new Peer(protocolVersion, peerId);
+        peer = new Peer(args);
 
+        System.out.println("AFTER PEER CREATION");
+        
         try {
             RemoteInterface stub = (RemoteInterface) UnicastRemoteObject.exportObject(peer, 0);
             Registry registry = LocateRegistry.getRegistry();
@@ -149,11 +154,6 @@ public class Peer implements RemoteInterface {
             ex.printStackTrace();
         }
 
-        peer.createChannels(tcpPort);
-        System.out.println("--- Channels Created ---");
-
-        peer.execChannels();
-        System.out.println("--- Running Channels --- \n\n");
 
         // sends WORKING message in order to make all the other peers know that this peer is available and get the files deleted information in order to delete them and update chunksDistribution info
         /*if(protocolVersion.equals("2.0")) {
@@ -197,9 +197,13 @@ public class Peer implements RemoteInterface {
         return peerId;
     }
 
+    public static Peer getPeer() {
+        return peer;
+    }
+
     
-    public ScheduledThreadPoolExecutor getThreadExec() {
-        return this.threadExec;
+    public static ScheduledThreadPoolExecutor getThreadExec() {
+        return threadExec;
     }
 
     
@@ -210,6 +214,10 @@ public class Peer implements RemoteInterface {
     
     public ConcurrentHashMap<String,Integer> getReceivedChunkMessages() {
         return this.receivedChunkMessages;
+    }
+
+    public ChordNode getChordNode() {
+        return this.chordNode;
     }
 
 
@@ -225,19 +233,13 @@ public class Peer implements RemoteInterface {
     }
 
 
-    // creates multicast channels
-    public void createChannels(int tcpPort) {
-        this.TCPChannel = new ChannelController(tcpPort, this);
-        /*this.MDB = new broadcast.ChannelController(mdbAddress, mdbPort, this);
-        this.MDR = new broadcast.ChannelController(mdrAddress, mdrPort, this);*/
+    public void createChannels(String ipAddress, int tcpPort) {
+        this.TCPChannel = new ChannelController(ipAddress, tcpPort);
     }
 
 
-    // 3 different threads executing multicast channels, 1 for each other
     public void execChannels() {
-        this.threadExec.execute(this.TCPChannel);
-        //this.threadExec.execute(this.MDB);
-        //this.threadExec.execute(this.MDR);
+        threadExec.execute(this.TCPChannel);
     }
 
 
@@ -248,7 +250,7 @@ public class Peer implements RemoteInterface {
             
         //try {
             byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
-            this.threadExec.execute(new ThreadSendMessages(this.TCPChannel, headerBytes, this.address));
+            threadExec.execute(new ThreadSendMessages(this.address.toString(), this.tcpPort, headerBytes));
         /*} catch(UnsupportedEncodingException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();

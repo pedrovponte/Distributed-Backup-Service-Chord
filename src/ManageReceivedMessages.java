@@ -1,14 +1,7 @@
-package storage;
-
-import peer.Peer;
-
 public class ManageReceivedMessages implements Runnable {
+    private Message message;
 
-    private Peer peer;
-    private byte[] message;
-
-    public ManageReceivedMessages(Peer peer, byte[] message) {
-        this.peer = peer; //returns a copy of this string with leading and trailing white space removed
+    public ManageReceivedMessages(Message message) {
         this.message = message;
     }
 
@@ -16,7 +9,47 @@ public class ManageReceivedMessages implements Runnable {
     // checks the message type and then creates a new thread to treat that message
     public void run() {
         System.out.println("INSIDE MESSAGE MANAGER");
-        // message: <Version> <broadcast.messages.MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
+        // message: <Version> <MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
+        String[] header = this.message.getHeader();
+        System.out.println("MESSAGE: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3]);
+
+        switch (header[1]) {
+            case "FINDSUCC":
+                Peer.getThreadExec().execute(new FindSuccThread(this.message));
+                break;
+
+            case "PUTCHUNK":
+
+                break;
+
+            case "STORED":
+
+                break;
+
+            case "DELETE":
+
+                break;
+
+            case "GETCHUNK":
+
+                break;
+
+            case "CHUNK":
+
+                break;
+
+            case "REMOVED":
+
+                break;
+
+            case "DELETED":
+
+                break;
+
+            default:
+
+                break;
+        }
         /*String[] messageStr = new String(this.message).split(" ");
         // System.out.println("Manager message: " + messageStr);
         switch (messageStr[1]){

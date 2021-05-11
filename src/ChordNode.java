@@ -1,14 +1,12 @@
-package chord;
-
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import org.graalvm.compiler.nodeinfo.NodeInfo;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
@@ -20,38 +18,26 @@ public class ChordNode {
     private final static int M = 128; // m-bit identifier
     private final static int N = (int) Math.pow(2, M); // maximum number of nodes of the circle
     private final static int R = (int) Math.log10(N); // routing entries
-    private int peerId;
     private int port;
-    private int id;
+    private BigInteger id;
     private NodeInfo nodeInfo;
     private AtomicReferenceArray<NodeInfo> fingerTable; // ensure that the array couldn't be updated simultaneously by different threads
     private ArrayList<NodeInfo> successors;
     private NodeInfo predecessor;
     private ScheduledThreadPoolExecutor threadExec;
-    private ChordChannel channel;
     private InetSocketAddress localAddress;
 
-    public ChordNode(int peerId, int port) {
-        this.peerId = peerId;
+    public ChordNode(String address, int port) {
         this.port = port;
-        String ipAddress = null;
-
-        try {
-            ipAddress = InetAddress.getLocalHost().getHostAddress();
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
-
+        String ipAddress = address;
         this.localAddress = new InetSocketAddress(ipAddress, port);
-        this.id = createHashSocketAddress(localAddress.toString());
+        byte[] idByte = createHashSocketAddress(localAddress);
+        this.id = new BigInteger(1, idByte);
         this.nodeInfo = new NodeInfo(this.id, this.localAddress);
         this.fingerTable = new AtomicReferenceArray<>(M);
         this.successors = new ArrayList<>();
-        this.threadExec = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(5); //serao suficientes ou serao muitas?
         initFingerTable();
         initSuccessors();
-        createChannel();
     }
 
 
@@ -79,14 +65,9 @@ public class ChordNode {
     }
 
 
-    public void createChannel() {
-        this.channel = new ChordChannel(this);
-        this.threadExec.execute(this.channel);
-    }
-
-
     // first node to enter in the ring needs to create that
     public void create() {
+        System.out.println("INSIDE CREATE CHORD");
         this.predecessor = null;
         this.fingerTable.set(0, this.nodeInfo);
         this.successors.set(0, this.nodeInfo);
@@ -94,16 +75,18 @@ public class ChordNode {
     }
 
 
-    public void join(InetSocketAddress address) {
+    public void join(String address, int port) {
         // send message to find successor
-        byte[] message = this.channel.constructHelloMessage(this.id);
-
-        this.channel.sendMessage(address, message);
+        System.out.println("INSIDE JOIN");
+        MessageBuilder messageBuilder = new MessageBuilder();
+        byte[] message = messageBuilder.constructFindSuccessorMessage(this.nodeInfo);
+        System.out.println("SENT: " + message.toString());
+        Peer.getThreadExec().execute(new ThreadSendMessages(address, port, message));
         
     }
 
 
-    public NodeInfo findSuccessor(InetSocketAddress address, int nodeId) {
+    public NodeInfo findSuccessor(String ipAddress, int port, BigInteger nodeId) {
         // ask node n to find the successor of id
         /*procedure n.findSuccessor(id) {
             if (predecessor != nil and id in (predecessor, n]) then return n
@@ -115,8 +98,8 @@ public class ChordNode {
             }
         }*/
         
-        
-        if(compareNodeIds(this.nodeInfo.getNodeId(), nodeId, this.fingerTable.get(0).getNodeId()) || nodeId == this.fingerTable.get(0).getNodeId()) {
+        System.out.println("INSIDE FIND SUCCESSOR");
+        /*if(compareNodeIds(this.nodeInfo.getNodeId(), nodeId, this.fingerTable.get(0).getNodeId()) || nodeId == this.fingerTable.get(0).getNodeId()) {
             return this.fingerTable.get(0);
         }
         else {
@@ -128,8 +111,9 @@ public class ChordNode {
 
             byte[] message = this.channel.constructFindSuccessorMessage(nodeId, n);
             this.channel.sendMessage(n.getSocketAddress(), message);
-            return 
-        }
+            return n;
+        }*/
+        return this.nodeInfo;
     }
 
     
@@ -144,7 +128,7 @@ public class ChordNode {
             return n
         }*/
 
-        NodeInfo fingerNode = null;
+        /*NodeInfo fingerNode = null;
 
         for(int i = M - 1; i >= 0; i--) {
             if(this.fingerTable.get(i) == null) {
@@ -171,8 +155,9 @@ public class ChordNode {
                 return succ;
             }
         }
-
-        return fingerNode;
+        
+        return fingerNode;*/
+        return this.nodeInfo;
     }
 
 
@@ -189,14 +174,13 @@ public class ChordNode {
     }
 
 
-    public int createHashSocketAddress(String socketAddress) {
+    public byte[] createHashSocketAddress(InetSocketAddress socketAddress) {
         try{
-            MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            byte[] encodedHash = digest.digest(socketAddress.getBytes(StandardCharsets.UTF_8));
-            ByteBuffer buf = ByteBuffer.wrap(encodedHash);
-
-            return Math.floorMod(buf.getInt(), N);
+            String toHash = socketAddress.getAddress().getHostAddress() + socketAddress.getPort();
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] encodedHash = digest.digest(toHash.getBytes(StandardCharsets.UTF_8));
             
+            return encodedHash;
         } catch(Exception e) {
             throw new RuntimeException(e);
         } 

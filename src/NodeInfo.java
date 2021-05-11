@@ -1,25 +1,24 @@
-package chord;
-
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 public class NodeInfo {
-    private int nodeId;
+    private BigInteger nodeId;
     private InetSocketAddress socketAddress;
     private String ip;
     private int port;
 
-    public NodeInfo(int nodeId, InetSocketAddress socketAddress) {
+    public NodeInfo(BigInteger nodeId, InetSocketAddress socketAddress) {
         this.nodeId = nodeId;
         this.socketAddress = socketAddress;
         this.ip = this.socketAddress.getAddress().toString();
         this.port = this.socketAddress.getPort();
     }
 
-    public int getNodeId() {
+    public BigInteger getNodeId() {
         return this.nodeId;
     }
 
-    public void setNodeId(int nodeId) {
+    public void setNodeId(BigInteger nodeId) {
         this.nodeId = nodeId;
     }
 
