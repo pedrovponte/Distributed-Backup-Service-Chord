@@ -19,7 +19,15 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "SUCCFOUND":
-                
+                Peer.getThreadExec().execute(new SuccFoundThread(this.message));
+                break;
+
+            case "FINDPRED":
+                Peer.getThreadExec().execute(new FindPredThread(this.message));
+                break;
+
+            case "PREDFOUND":
+                Peer.getThreadExec().execute(new PredFoundThread(this.message));
                 break;
 
             case "PUTCHUNK":

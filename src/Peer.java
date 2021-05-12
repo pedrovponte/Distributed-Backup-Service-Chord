@@ -97,7 +97,7 @@ public class Peer implements RemoteInterface {
         System.out.println("BEFORE IF");
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch(Exception e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
@@ -108,6 +108,7 @@ public class Peer implements RemoteInterface {
             chordNode.create();
         }
         else if(args.length == 6) {
+            System.out.println("INSIDE ELSE IF");
             chordNode.join(args[4], Integer.parseInt(args[5]));
         }
 

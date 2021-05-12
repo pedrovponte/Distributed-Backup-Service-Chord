@@ -8,8 +8,8 @@ public class FindSuccThread implements Runnable {
 
 	@Override
 	public void run() {
-        System.out.println("INSIDE FindSuccThread");
-        // FINDSUCC + nodeId + address + port
+        //System.out.println("INSIDE FindSuccThread");
+        // Version FINDSUCC + nodeId + address + port
         String[] header = this.message.getHeader();
         
         System.out.println("RECEIVED: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
@@ -22,7 +22,7 @@ public class FindSuccThread implements Runnable {
 
         if(nodeInfo != null) {
             MessageBuilder messageBuilder = new MessageBuilder();
-            byte[] response = messageBuilder.constructFindSuccessorMessage(nodeInfo);
+            byte[] response = messageBuilder.constructSuccessorFoundMessage(nodeInfo);
             System.out.println("SENT: " + response.toString());
             Peer.getThreadExec().execute(new ThreadSendMessages(address, port, response));
         }
