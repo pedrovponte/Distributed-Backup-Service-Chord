@@ -12,14 +12,19 @@ public class FindSuccThread implements Runnable {
         // FINDSUCC + nodeId + address + port
         String[] header = this.message.getHeader();
         
-        System.out.println("RECEIVED: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3]);
+        System.out.println("RECEIVED: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
 
-        BigInteger nodeId = new BigInteger(header[1]);
-        String address = header[2];
-        int port = Integer.parseInt(header[3]);
+        BigInteger nodeId = new BigInteger(header[2]);
+        String address = header[3];
+        int port = Integer.parseInt(header[4]);
 
-        NodeInfo nodeInfo = Peer.getPeer().getChordNode().findSuccessor(address, port, nodeId); // retornar NodeInfo ou ChordNode?
+        NodeInfo nodeInfo = Peer.getChordNode().findSuccessor(address, port, nodeId); // retornar NodeInfo ou ChordNode?
 
-
+        if(nodeInfo != null) {
+            MessageBuilder messageBuilder = new MessageBuilder();
+            byte[] response = messageBuilder.constructFindSuccessorMessage(nodeInfo);
+            System.out.println("SENT: " + response.toString());
+            Peer.getThreadExec().execute(new ThreadSendMessages(address, port, response));
+        }
 	}
 }

@@ -22,7 +22,7 @@ public class Peer implements RemoteInterface {
     private ConcurrentHashMap<String, Integer> receivedChunkMessages;
     private ServerSocket serverSocket;
     private InetAddress address;
-    private ChordNode chordNode;
+    private static ChordNode chordNode;
     private int tcpPort;
     private static Peer peer;
 
@@ -92,7 +92,7 @@ public class Peer implements RemoteInterface {
         System.out.println("Total: " + chunks.size());
 
 
-        this.chordNode = new ChordNode(this.address.getHostAddress(), this.tcpPort);
+        chordNode = new ChordNode(this.address.getHostAddress(), this.tcpPort);
 
         System.out.println("BEFORE IF");
 
@@ -216,8 +216,8 @@ public class Peer implements RemoteInterface {
         return this.receivedChunkMessages;
     }
 
-    public ChordNode getChordNode() {
-        return this.chordNode;
+    public static ChordNode getChordNode() {
+        return chordNode;
     }
 
 

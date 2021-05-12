@@ -10,7 +10,7 @@ public class NodeInfo {
     public NodeInfo(BigInteger nodeId, InetSocketAddress socketAddress) {
         this.nodeId = nodeId;
         this.socketAddress = socketAddress;
-        this.ip = this.socketAddress.getAddress().toString();
+        this.ip = this.socketAddress.getAddress().getHostAddress();
         this.port = this.socketAddress.getPort();
     }
 
