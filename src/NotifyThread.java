@@ -1,17 +1,18 @@
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
-public class PredFoundThread implements Runnable {
+public class NotifyThread implements Runnable {
     Message message;
 
-    public PredFoundThread(Message message) {
+    public NotifyThread(Message message) {
         this.message = message;
     }
 
-	@Override
+
+    @Override
 	public void run() {
-        System.out.println("INSIDE PredFoundThread");
-        // Version PREDFOUND + nodeId + address + port
+        System.out.println("INSIDE NotifyThread");
+        // Version + NOTIFY + nodeId + address + port 
         String[] header = this.message.getHeader();
         
         System.out.println("RECEIVED: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
@@ -21,7 +22,7 @@ public class PredFoundThread implements Runnable {
         int port = Integer.parseInt(header[4]);
 
         NodeInfo node = new NodeInfo(nodeId, new InetSocketAddress(address, port));
-        Peer.getChordNode().setSuccPred(node);
-        Peer.getChordNode().decrementStabilizeCountDownLatch();
-	}
+
+        Peer.getChordNode().notify(node);
+    }
 }

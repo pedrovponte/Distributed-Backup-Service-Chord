@@ -121,7 +121,7 @@ public class Peer implements RemoteInterface {
         // add two arguments (ip address and port to connect to chord ring in case it exists. Otherwise, create a new one)
         if (args.length != 4 && args.length != 6) {
             System.out.println(
-                    "Usage: java peer.peer.Peer <protocol_version> <peer_id> <service_access_point> <TCP_port> <ip_address_of_other> <port_of_other>");
+                    "Usage: java Peer <protocol_version> <peer_id> <service_access_point> <TCP_port> <ip_address_of_other> <port_of_other>");
             return;
         }
 

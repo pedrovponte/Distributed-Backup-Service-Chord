@@ -29,6 +29,8 @@ public class ChordNode {
     private ScheduledThreadPoolExecutor threadExec;
     private InetSocketAddress localAddress;
     private CountDownLatch joinCountDownLatch;
+    private CountDownLatch stabilizeCountDownLatch;
+    private NodeInfo succPred;
 
     public ChordNode(String address, int port) {
         this.port = port;
@@ -42,6 +44,8 @@ public class ChordNode {
         this.predecessor = null;
         this.successor = this.nodeInfo;
         this.joinCountDownLatch = new CountDownLatch(1);
+        this.stabilizeCountDownLatch = new CountDownLatch(1);
+        this.succPred = null;
         initFingerTable();
     }
 
@@ -51,33 +55,49 @@ public class ChordNode {
     }
 
 
+    public NodeInfo getPredecessor() {
+        return this.predecessor;
+    }
+
+
     public void initFingerTable() {
         for(int i = 0; i < M; i++) {
             this.fingerTable.set(i, this.nodeInfo);
         }
     }
 
+
     public void decrementJoinCountDownLatch() {
-        //System.out.println("DECREMENT LATCH");
+        //System.out.println("JOIN DECREMENT LATCH");
         this.joinCountDownLatch.countDown();
     }
+
+
+    public void decrementStabilizeCountDownLatch() {
+        //System.out.println("STABILIZE DECREMENT LATCH");
+        this.stabilizeCountDownLatch.countDown();
+    }
+
 
     public void setFingerTablePosition(int pos, NodeInfo node) {
         //System.out.println("SET FINGER TABLE");
         this.fingerTable.set(pos, node);
     }
 
+
     public void setSuccessor(NodeInfo node) {
         //System.out.println("SET SUCCESSOR");
         this.successor = node;
     }
 
+
     public void setPredecessor(NodeInfo node) {
         this.predecessor = node;
     }
 
-    public NodeInfo getPredecessor() {
-        return this.predecessor;
+
+    public void setSuccPred(NodeInfo node) {
+        this.succPred = node;
     }
 
 
@@ -187,29 +207,69 @@ public class ChordNode {
         return this.nodeInfo;
     }
 
+
     public void mantainer() {
         Peer.getThreadExec().scheduleAtFixedRate(new ChordMantainer(this, "stabilize"), 3, 3, TimeUnit.SECONDS);
         Peer.getThreadExec().scheduleAtFixedRate(new ChordMantainer(this, "fix_fingers"), 3, 5, TimeUnit.SECONDS);
         Peer.getThreadExec().scheduleAtFixedRate(new ChordMantainer(this, "check_predecessor"), 3, 4, TimeUnit.SECONDS);
     }
 
+
     public void stabilize() {
-        NodeInfo succ_pred = null;
+        // Periodically at n:
+        /*v := succ.pred
+        if (v != nil and v in (n,succ]) then
+            set succ := v
+        send a notify(n) to succ*/
+        
 
         if(this.nodeInfo.getNodeId().equals(this.fingerTable.get(0).getNodeId()) && this.nodeInfo.getIp().equals(this.fingerTable.get(0).getIp()) && this.nodeInfo.getPort() == this.fingerTable.get(0).getPort()) {
-            succ_pred = this.predecessor;
+            this.succPred = this.predecessor;
         }
         else {
             MessageBuilder messageBuilder = new MessageBuilder();
             byte[] message = messageBuilder.constructFindPredecessorMessage(this.nodeInfo);
             System.out.println("SENT: " + message.toString());
             Peer.getThreadExec().execute(new ThreadSendMessages(this.nodeInfo.getIp(), this.nodeInfo.getPort(), message));
+            
+            try {
+                this.stabilizeCountDownLatch.await();
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+            }
+
+            this.stabilizeCountDownLatch = new CountDownLatch(1);
+        }
+
+        if(this.succPred != null) {
+            if(compareNodeIds(this.nodeInfo.getNodeId(), this.succPred.getNodeId(), this.fingerTable.get(0).getNodeId())) {
+                this.successor = this.succPred;
+                this.fingerTable.set(0, this.succPred);
+            }
+        }
+
+        MessageBuilder messageBuilder = new MessageBuilder();
+        byte[] message = messageBuilder.constructNotifyMessage(this.nodeInfo);
+        System.out.println("SENT: " + message.toString());
+        Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getSocketAddress().getAddress().getHostAddress(), this.fingerTable.get(0).getSocketAddress().getPort(), message));
+    }
+
+    public void notify(NodeInfo node) {
+        // When receiving notify(p) at n:
+        /*if (pred = nil or p in (pred, n]) then
+            set pred := p*/
+
+        if(this.predecessor == null || compareNodeIds(this.predecessor.getNodeId(), node.getNodeId(), this.successor.getNodeId())) {
+            this.predecessor = node;
         }
     }
+
 
     public void fix_fingers() {
         System.out.println("FIX FINGERS");
     }
+
 
     public void check_predecessor() {
         System.out.println("CHECK PREDECESSOR");
