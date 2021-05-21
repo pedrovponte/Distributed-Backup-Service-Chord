@@ -1,6 +1,7 @@
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -31,6 +32,8 @@ public class ChordNode {
     private CountDownLatch joinCountDownLatch;
     private CountDownLatch stabilizeCountDownLatch;
     private NodeInfo succPred;
+    private int next;
+    private String[] answerAlive;
 
     public ChordNode(String address, int port) {
         this.port = port;
@@ -46,6 +49,8 @@ public class ChordNode {
         this.joinCountDownLatch = new CountDownLatch(1);
         this.stabilizeCountDownLatch = new CountDownLatch(1);
         this.succPred = null;
+        this.next = -1;
+        this.answerAlive = null;
         initFingerTable();
     }
 
@@ -100,6 +105,10 @@ public class ChordNode {
         this.succPred = node;
     }
 
+    public void setAnswerAlive(String[] answer) {
+        this.answerAlive = answer;
+    }
+
 
     // first node to enter in the ring needs to create that
     public void create() {
@@ -115,7 +124,6 @@ public class ChordNode {
         //System.out.println("INSIDE JOIN");
         MessageBuilder messageBuilder = new MessageBuilder();
         byte[] message = messageBuilder.constructFindSuccessorMessage(this.nodeInfo);
-        System.out.println("SENT: " + message.toString());
         Peer.getThreadExec().execute(new ThreadSendMessages(address, port, message));
         
         try {
@@ -126,6 +134,8 @@ public class ChordNode {
         }
 
         System.out.println("JOINED");
+
+        System.out.println("SUCCESSOR: " + this.successor);
 
         this.predecessor = this.successor;
         
@@ -173,7 +183,6 @@ public class ChordNode {
 
             MessageBuilder messageBuilder = new MessageBuilder();
             byte[] message = messageBuilder.constructFindSuccessorMessage(this.nodeInfo);
-            System.out.println("SENT: " + message.toString());
             Peer.getThreadExec().execute(new ThreadSendMessages(n.getSocketAddress().getAddress().getHostAddress(), n.getSocketAddress().getPort(), message));
 
             return null;
@@ -222,6 +231,7 @@ public class ChordNode {
             set succ := v
         send a notify(n) to succ*/
         
+        System.out.println("STABILIZE");
 
         if(this.nodeInfo.getNodeId().equals(this.fingerTable.get(0).getNodeId()) && this.nodeInfo.getIp().equals(this.fingerTable.get(0).getIp()) && this.nodeInfo.getPort() == this.fingerTable.get(0).getPort()) {
             this.succPred = this.predecessor;
@@ -229,8 +239,7 @@ public class ChordNode {
         else {
             MessageBuilder messageBuilder = new MessageBuilder();
             byte[] message = messageBuilder.constructFindPredecessorMessage(this.nodeInfo);
-            System.out.println("SENT: " + message.toString());
-            Peer.getThreadExec().execute(new ThreadSendMessages(this.nodeInfo.getIp(), this.nodeInfo.getPort(), message));
+            Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getIp(), this.fingerTable.get(0).getPort(), message));
             
             try {
                 this.stabilizeCountDownLatch.await();
@@ -251,7 +260,6 @@ public class ChordNode {
 
         MessageBuilder messageBuilder = new MessageBuilder();
         byte[] message = messageBuilder.constructNotifyMessage(this.nodeInfo);
-        System.out.println("SENT: " + message.toString());
         Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getSocketAddress().getAddress().getHostAddress(), this.fingerTable.get(0).getSocketAddress().getPort(), message));
     }
 
@@ -267,12 +275,69 @@ public class ChordNode {
 
 
     public void fix_fingers() {
+        // When receiving notify(p) at n:
+        /*procedure n.fixFingers() {
+            next := next+1
+            if (next > m) then
+                next := 1
+            finger[next] := findSuccessor(n Å 2^(next - 1))
+        }*/
+
         System.out.println("FIX FINGERS");
+
+        this.next += 1;
+
+        if(this.next > M) {
+            this.next = 0;
+        }
+
+        BigInteger p = BigDecimal.valueOf(Math.pow(2, this.next)).toBigInteger();
+        BigInteger s = p.add(this.nodeInfo.getNodeId());
+        BigInteger module = BigDecimal.valueOf(Math.pow(2, M)).toBigInteger();
+        BigInteger finger = s.mod(module);
+
+        NodeInfo node = findSuccessor(this.nodeInfo.getIp(), this.nodeInfo.getPort(), finger); // duvida aqui no address e port
+
+        this.fingerTable.set(this.next, node);
     }
 
 
     public void check_predecessor() {
+        /*procedure n.checkPredecessor() {
+            if predecessor has failed then
+                predecessor := nil
+        }*/
+
         System.out.println("CHECK PREDECESSOR");
+
+        if(this.predecessor != null || !checkPredecessorAlive()) {
+            this.predecessor = null;
+        }
+
+    }
+
+    public boolean checkPredecessorAlive() {
+        Boolean alive = false;
+        this.answerAlive = null;
+        MessageBuilder messageBuilder = new MessageBuilder();
+        byte[] message = messageBuilder.constructPredAliveMessage(this.nodeInfo);
+        Peer.getThreadExec().execute(new ThreadSendMessages(this.predecessor.getIp(), this.predecessor.getPort(), message));
+
+        System.out.println("BEFORE THREAD SLEEP");
+        try {
+            Thread.sleep(500);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+        System.out.println("AFTER THREAD SLEEP");
+
+        if(this.answerAlive != null) {
+            System.out.println("PRED ALIVE");
+            alive = true;
+        }
+
+        return alive;
     }
 
 

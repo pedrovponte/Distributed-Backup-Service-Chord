@@ -7,6 +7,7 @@ public class MessageBuilder {
     // Version FINDSUCC + nodeId + address + port
     public byte[] constructFindSuccessorMessage(NodeInfo nodeInfo) {
         String message = "1.0 FINDSUCC " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        System.out.println("SENT: " + message);
         return message.getBytes();
     }
 
@@ -15,6 +16,7 @@ public class MessageBuilder {
     public byte[] constructSuccessorFoundMessage(NodeInfo nodeInfo) {
         //System.out.println("INSIDE SUCCFOUND");
         String message = "1.0 SUCCFOUND " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        System.out.println("SENT: " + message);
         return message.getBytes();
     }
 
@@ -23,6 +25,7 @@ public class MessageBuilder {
     public byte[] constructFindPredecessorMessage(NodeInfo nodeInfo) {
         System.out.println("INSIDE FINDPRED");
         String message = "1.0 FINDPRED " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        System.out.println("SENT: " + message);
         return message.getBytes();
     }
 
@@ -31,6 +34,7 @@ public class MessageBuilder {
     public byte[] constructPredecessorFoundMessage(NodeInfo nodeInfo) {
         System.out.println("INSIDE PREDFOUND");
         String message = "1.0 PREDFOUND " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        System.out.println("SENT: " + message);
         return message.getBytes();
     }
     
@@ -39,6 +43,21 @@ public class MessageBuilder {
     public byte[] constructNotifyMessage(NodeInfo nodeInfo) {
         System.out.println("INSIDE NOTIFY");
         String message = "1.0 NOTIFY " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        System.out.println("SENT: " + message);
+        return message.getBytes();
+    }
+
+    public byte[] constructPredAliveMessage(NodeInfo nodeInfo) {
+        System.out.println("INSIDE PREDALIVE");
+        String message = "1.0 PREDALIVE " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        System.out.println("SENT: " + message);
+        return message.getBytes();
+    }
+
+    public byte[] constructAliveMessage(NodeInfo nodeInfo) {
+        System.err.println("INSIDE ALIVE");
+        String message = "1.0 ALIVE " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        System.out.println("SENT: " + message);
         return message.getBytes();
     }
 }

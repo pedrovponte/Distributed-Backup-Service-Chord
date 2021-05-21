@@ -34,6 +34,14 @@ public class ManageReceivedMessages implements Runnable {
                 Peer.getThreadExec().execute(new NotifyThread(this.message));
                 break;
 
+            case "PREDALIVE":
+                Peer.getThreadExec().execute(new PredAliveThread(this.message));
+                break;
+
+            case "ALIVE":
+                Peer.getThreadExec().execute(new AliveThread(this.message));
+                break;
+
             case "PUTCHUNK":
 
                 break;

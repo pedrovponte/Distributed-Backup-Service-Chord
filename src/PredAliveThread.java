@@ -1,17 +1,17 @@
 import java.math.BigInteger;
 
-public class FindPredThread implements Runnable {
+public class PredAliveThread implements Runnable{
     Message message;
 
-    public FindPredThread(Message message) {
+    public PredAliveThread(Message message) {
         this.message = message;
     }
 
 
-	@Override
+    @Override
 	public void run() {
-		System.out.println("INSIDE FindPredThread");
-        // Version FINDSUCC + nodeId + address + port
+        System.out.println("INSIDE PredAliveThread");
+        // Version PREDFOUND + nodeId + address + port
         String[] header = this.message.getHeader();
         
         System.out.println("RECEIVED: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
@@ -20,11 +20,9 @@ public class FindPredThread implements Runnable {
         String address = header[3];
         int port = Integer.parseInt(header[4]);
 
-        NodeInfo predecessor = Peer.getChordNode().getPredecessor();
-
         MessageBuilder messageBuilder = new MessageBuilder();
-        byte[] response = messageBuilder.constructPredecessorFoundMessage(predecessor);
+        byte[] response = messageBuilder.constructAliveMessage(Peer.getChordNode().getNodeInfo());
+        System.out.println("SENT: " + response.toString());
         Peer.getThreadExec().execute(new ThreadSendMessages(address, port, response));
 	}
-    
 }

@@ -74,6 +74,7 @@ public class ChannelController implements Runnable {
                 ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                 Message message = (Message) ois.readObject();
                 Peer.getThreadExec().execute(new ManageReceivedMessages(message));
+                //socket.close();
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());

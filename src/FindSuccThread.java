@@ -23,7 +23,6 @@ public class FindSuccThread implements Runnable {
         if(nodeInfo != null) {
             MessageBuilder messageBuilder = new MessageBuilder();
             byte[] response = messageBuilder.constructSuccessorFoundMessage(nodeInfo);
-            System.out.println("SENT: " + response.toString());
             Peer.getThreadExec().execute(new ThreadSendMessages(address, port, response));
         }
 	}

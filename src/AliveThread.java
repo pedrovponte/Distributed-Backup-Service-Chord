@@ -1,16 +1,15 @@
 import java.math.BigInteger;
 
-public class FindPredThread implements Runnable {
+public class AliveThread implements Runnable {
     Message message;
 
-    public FindPredThread(Message message) {
+    public AliveThread(Message message) {
         this.message = message;
     }
 
-
-	@Override
+    @Override
 	public void run() {
-		System.out.println("INSIDE FindPredThread");
+		System.out.println("INSIDE AliveThread");
         // Version FINDSUCC + nodeId + address + port
         String[] header = this.message.getHeader();
         
@@ -20,11 +19,6 @@ public class FindPredThread implements Runnable {
         String address = header[3];
         int port = Integer.parseInt(header[4]);
 
-        NodeInfo predecessor = Peer.getChordNode().getPredecessor();
-
-        MessageBuilder messageBuilder = new MessageBuilder();
-        byte[] response = messageBuilder.constructPredecessorFoundMessage(predecessor);
-        Peer.getThreadExec().execute(new ThreadSendMessages(address, port, response));
+        Peer.getChordNode().setAnswerAlive(header);
 	}
-    
 }
