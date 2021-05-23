@@ -174,6 +174,7 @@ public class ChordNode {
         }
 
         else {
+            System.out.println("ELSE FIND SUCCESORRRRRRRRR");
             //System.out.println("INSIDE ELSE");
             NodeInfo n = closestPrecedingNode(nodeId);
 
@@ -310,7 +311,7 @@ public class ChordNode {
 
         System.out.println("CHECK PREDECESSOR");
 
-        if(this.predecessor != null || !checkPredecessorAlive()) {
+        if(this.predecessor != null && !checkPredecessorAlive()) {
             this.predecessor = null;
         }
 
