@@ -222,6 +222,16 @@ public class Peer implements RemoteInterface {
     }
 
 
+    public InetAddress getAddress() {
+        return this.address;
+    }
+
+    public int getTcpPort() {
+        return this.tcpPort;
+    }
+
+
+
     // increment the number of CHUNK messages received for a given chunkId, in order to know if some peer already has sent the chunk chunkId to the initiator peer
     public void incrementReceivedChunkMessagesNumber(String chunkId) {
         Integer number = this.receivedChunkMessages.get(chunkId);
@@ -246,32 +256,17 @@ public class Peer implements RemoteInterface {
 
     @Override
     public void backup(String path, int replication) {
-        
-        String header = "Hello World" + " \r\n\r\n";
-            
-        //try {
-            byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
-            threadExec.execute(new ThreadSendMessages(this.address.toString(), this.tcpPort, headerBytes));
-        /*} catch(UnsupportedEncodingException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        } catch(IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }*/
-
-        
-        /*File backupFile = new File(path);
+        File backupFile = new File(path);
 
         if(!backupFile.exists()) {
             System.out.println("The file - " + path + " - doesn't exist.");
             return;
         }
 
-        storage.FileManager fileManager = new storage.FileManager(path, replication, peerId);
+        FileManager fileManager = new FileManager(path, replication, peerId);
 
         String fileIDNew = fileManager.getFileID();
-
+        
         for(int i = 0; i < storage.getFilesStored().size(); i++) {
             if(storage.getFilesStored().get(i).getFileID().equals(fileIDNew)) {
                 System.out.println("File already backed up by this peer.");
@@ -281,11 +276,12 @@ public class Peer implements RemoteInterface {
 
         storage.addFile(fileManager);
 
-        if(storage.hasDeletedFile(fileManager.getFileID())) {
+        // relacionado com enhancement do delete proj1
+        /*if(storage.hasDeletedFile(fileManager.getFileID())) {
             storage.removeDeletedFile(fileManager.getFileID());
-        }
+        }*/
 
-        ArrayList<storage.Chunk> fileChunks = fileManager.getFileChunks();
+        ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
 
         for(int i = 0; i < fileChunks.size(); i++) {
             // <Version> PUTCHUNK <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF><Body>
@@ -304,7 +300,64 @@ public class Peer implements RemoteInterface {
                 }
 
                 // send threads
-                this.threadExec.execute(new broadcast.ThreadSendMessages(this.MDB, message));
+                //this.threadExec.execute(new ThreadSendMessages(this.MDB, message));
+                //this.threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
+
+                System.out.println("SENT: "+ header);
+            } catch(UnsupportedEncodingException e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+            } catch(IOException e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+
+        /*File backupFile = new File(path);
+
+        if(!backupFile.exists()) {
+            System.out.println("The file - " + path + " - doesn't exist.");
+            return;
+        }
+
+        FileManager fileManager = new FileManager(path, replication, peerId);
+
+        String fileIDNew = fileManager.getFileID();
+
+        for(int i = 0; i < storage.getFilesStored().size(); i++) {
+            if(storage.getFilesStored().get(i).getFileID().equals(fileIDNew)) {
+                System.out.println("File already backed up by this peer.");
+                return;
+            }
+        }
+
+        storage.addFile(fileManager);
+
+        if(storage.hasDeletedFile(fileManager.getFileID())) {
+            storage.removeDeletedFile(fileManager.getFileID());
+        }
+
+        ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
+
+        for(int i = 0; i < fileChunks.size(); i++) {
+            // <Version> PUTCHUNK <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF><Body>
+            String header = this.protocolVersion + " PUTCHUNK " + peerId + " " + fileManager.getFileID() + " " + fileChunks.get(i).getChunkNo() + " " + fileChunks.get(i).getReplication() + " \r\n\r\n";
+            
+            try {
+                byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
+                byte[] body = fileChunks.get(i).getChunkMessage();
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+                outputStream.write(headerBytes);
+                outputStream.write(body);
+                byte[] message = outputStream.toByteArray();
+                
+                if(!(storage.hasRegisterStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo()))) {
+                    storage.createRegisterToStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo());
+                }
+
+                // send threads
+                this.threadExec.execute(new ThreadSendMessages(this.MDB, message));
                 this.threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
 
                 System.out.println("SENT: "+ header);

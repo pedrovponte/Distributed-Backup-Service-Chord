@@ -23,7 +23,7 @@ public class MessageBuilder {
 
     // Version + FINDPRED + nodeId + address + port 
     public byte[] constructFindPredecessorMessage(NodeInfo nodeInfo) {
-        System.out.println("INSIDE FINDPRED");
+        //System.out.println("INSIDE FINDPRED");
         String message = "1.0 FINDPRED " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
         System.out.println("SENT: " + message);
         return message.getBytes();
@@ -32,7 +32,7 @@ public class MessageBuilder {
 
     // Version + PREDFOUND + nodeId + address + port 
     public byte[] constructPredecessorFoundMessage(NodeInfo nodeInfo) {
-        System.out.println("INSIDE PREDFOUND");
+        //System.out.println("INSIDE PREDFOUND");
         String message = "1.0 PREDFOUND " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
         System.out.println("SENT: " + message);
         return message.getBytes();
@@ -41,23 +41,35 @@ public class MessageBuilder {
     
     // Version + NOTIFY + nodeId + address + port 
     public byte[] constructNotifyMessage(NodeInfo nodeInfo) {
-        System.out.println("INSIDE NOTIFY");
+        //System.out.println("INSIDE NOTIFY");
         String message = "1.0 NOTIFY " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
 
     public byte[] constructPredAliveMessage(NodeInfo nodeInfo) {
-        System.out.println("INSIDE PREDALIVE");
+        //System.out.println("INSIDE PREDALIVE");
         String message = "1.0 PREDALIVE " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
 
     public byte[] constructAliveMessage(NodeInfo nodeInfo) {
-        System.err.println("INSIDE ALIVE");
+        //System.err.println("INSIDE ALIVE");
         String message = "1.0 ALIVE " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
         System.out.println("SENT: " + message);
+        return message.getBytes();
+    }
+
+    // <Version> PUTCHUNK <SenderId> <Address> <Port> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF> <Body>
+    public byte[] constructPutChunkMessage(Peer peer, String fileId, Chunk chunk) {
+        //System.out.println("INSIDE PUTCHUNK MESSAGE");
+        int peerId = peer.getPeerId();
+        String address = peer.getAddress().getHostAddress();
+        int port = peer.getTcpPort();
+        int chunkNo = chunk.getChunkNo();
+        int replication = chunk.getReplication();
+        String message = "";
         return message.getBytes();
     }
 }
