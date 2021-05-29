@@ -59,15 +59,6 @@ public class Peer implements RemoteInterface {
             storage = new FileStorage();
         }
 
-        //this.TCPport = 6000 + peerId;
-
-        /*try {
-            this.serverSocket = new ServerSocket(this.TCPport);
-        } catch(Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }*/
-
 
         ConcurrentHashMap<String, Integer> stored = this.getStorage().getStoredMessagesReceived();
         System.out.println("-------STORED-------");
@@ -96,7 +87,6 @@ public class Peer implements RemoteInterface {
 
         chordNode = new ChordNode(this.address.getHostAddress(), this.tcpPort);
 
-        System.out.println("BEFORE IF");
 
         try {
             Thread.sleep(1000);
@@ -106,15 +96,12 @@ public class Peer implements RemoteInterface {
         }
 
         if(args.length == 4) {
-            System.out.println("INSIDE FIRST IF");
             chordNode.create();
         }
         else if(args.length == 6) {
-            System.out.println("INSIDE ELSE IF");
             chordNode.join(args[4], Integer.parseInt(args[5]));
         }
 
-        System.out.println("AFTER IFS");
         // chamar as atualizaçoes aqui ou no create?
     }
 

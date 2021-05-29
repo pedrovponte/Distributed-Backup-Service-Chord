@@ -9,18 +9,35 @@ public class MessageBuilder {
     }
 
 
-    // Version FINDSUCC + nodeId + address + port
-    public byte[] constructFindSuccessorMessage(NodeInfo nodeInfo) {
-        String message = "1.0 FINDSUCC " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+    // Version FINDSUCC + nodeId + address + port + isFinger (+ <fingerPos>)*
+    public byte[] constructFindSuccessorMessage(NodeInfo nodeInfo, Boolean isFinger, int fingerPos) {
+        String message = "1.0 FINDSUCC " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + " " + isFinger;
+        
+        if(isFinger) {
+            message += " " + fingerPos + "\r\n\r\n";
+        }
+        else {
+            message += "\r\n\r\n";
+        }
+        
+        
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
 
 
-    // Version SUCCFOUND + nodeId + address + port
-    public byte[] constructSuccessorFoundMessage(NodeInfo nodeInfo) {
+    // Version SUCCFOUND + nodeId + address + port + isFinger (+ <fingerPos>)* 
+    public byte[] constructSuccessorFoundMessage(NodeInfo nodeInfo, Boolean isFinger, int fingerPos) {
         //System.out.println("INSIDE SUCCFOUND");
-        String message = "1.0 SUCCFOUND " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + "\r\n\r\n";
+        String message = "1.0 SUCCFOUND " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + " " + isFinger;
+        
+        if(isFinger) {
+            message += " " + fingerPos + "\r\n\r\n";
+        }
+        else {
+            message += "\r\n\r\n";
+        }
+        
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
