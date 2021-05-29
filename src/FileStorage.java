@@ -1,3 +1,4 @@
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -28,6 +29,10 @@ public class FileStorage implements java.io.Serializable {
     // key = fileId; value = peerId
     private ConcurrentHashMap<String, ArrayList<Integer>> filesDeleted;
 
+    // for each key, stores the addresses of the nodes that have backed up the chunks
+    // key = fileId_chunkNo; value = array with the addresses of the nodes that have backed up the file
+    private ConcurrentHashMap<String, ArrayList<InetSocketAddress>> backupChunksDistribution;
+
     private int capacity;
 
     private static final long serialVersionUID = 4066270093854086490L;
@@ -41,6 +46,7 @@ public class FileStorage implements java.io.Serializable {
         this.filesRestored = new ArrayList<String>();
         this.chunksRestored = new ConcurrentHashMap<String, byte[]>();
         this.filesDeleted = new ConcurrentHashMap<String, ArrayList<Integer>>();
+        this.backupChunksDistribution = new ConcurrentHashMap<String, ArrayList<InetSocketAddress>>();
         this.capacity = 1 * 1000 * 1000 * 1000; // 1B * 1000 (1KB) * 1000 (1MB) * 1000 (1GB) -> initially, all the peers have 1GB of capacity
     }
 
@@ -72,6 +78,10 @@ public class FileStorage implements java.io.Serializable {
 
     public ConcurrentHashMap<String, ArrayList<Integer>> getFilesDeleted() {
         return this.filesDeleted;
+    }
+
+    public ConcurrentHashMap<String, ArrayList<InetSocketAddress>> getBackupChunksDistribution() {
+        return this.backupChunksDistribution;
     }
 
 
@@ -385,6 +395,44 @@ public class FileStorage implements java.io.Serializable {
 
     public void removeDeletedFile(String fileId) {
         this.filesDeleted.remove(fileId);
+    }
+
+    public void addBackupFileDistribution(String address, int port, String fileId, int chunkNo) {
+        String chunkId = fileId + "_" + chunkNo;
+        InetSocketAddress candidate = new InetSocketAddress(address, port);
+
+        if(this.backupChunksDistribution.containsKey(chunkId)) {
+            //System.out.println("HAS REGIST CHUNKID");
+            ArrayList<InetSocketAddress> addresses = this.backupChunksDistribution.get(chunkId);
+
+            if(addresses.size() > 0) {
+                Boolean hasAddress = false;
+                for(int i = 0; i < addresses.size(); i++) {
+                    if(addresses.get(i).equals(candidate)) {
+                        hasAddress = true;
+                    }
+                }
+
+                if(!hasAddress) {
+                    this.backupChunksDistribution.get(chunkId).add(candidate);
+                }
+            }
+            else {
+                this.backupChunksDistribution.get(chunkId).add(candidate);
+            }
+        }
+        else {
+            //System.out.println("DOESN'T HAVE REGIST");
+            ArrayList<InetSocketAddress> app = new ArrayList<>();
+            app.add(candidate);
+            this.backupChunksDistribution.put(chunkId, app);
+        }
+
+        // System.out.println("-----BACKUP CHUNKS DISTRIBUTION-------------");
+        // for(String key : this.backupChunksDistribution.keySet()) {
+        //     System.out.println(key + ": " + this.backupChunksDistribution.get(key));  
+        // }
+        // System.out.println("--------------------------");
     }
 }
 

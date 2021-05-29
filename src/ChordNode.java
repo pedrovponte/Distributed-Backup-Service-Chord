@@ -399,9 +399,9 @@ public class ChordNode {
         this.fingerTable.set(this.next, node);
 
 
-        for(int i = 0; i < M; i++) {
+        /*for(int i = 0; i < M; i++) {
             System.out.println("FINGER " + i + ": " + this.fingerTable.get(i));
-        }
+        }*/
 
 
     }

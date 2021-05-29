@@ -423,7 +423,7 @@ public class Peer implements RemoteInterface {
                         message = this.protocolVersion + " GETCHUNK " + peerId + " " + files.get(i).getFileID() + " " + j + " " + this.TCPport + " \r\n\r\n";
                     }
                     try {
-                        this.threadExec.execute(new broadcast.ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
+                        this.threadExec.execute(new ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
 
                         System.out.println("SENT: " + message);
                     } catch (Exception e) {
