@@ -122,4 +122,11 @@ public class MessageBuilder {
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
+
+    // <Version> DELETE <SenderId> <FileId> <CRLF><CRLF>
+    public byte[] constructDeleteMessage(String address, int port, String fileId, int chunkNo) {
+        String message = "1.0 DELETE " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        System.out.println("SENT: " + message);
+        return message.getBytes();
+    }
 }

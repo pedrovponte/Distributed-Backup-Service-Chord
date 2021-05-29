@@ -383,7 +383,7 @@ public class Peer implements RemoteInterface {
         }*/
     }
 
-
+    //TODO
     @Override
     public void restore(String path) {
         //<Version> GETCHUNK <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
@@ -436,28 +436,65 @@ public class Peer implements RemoteInterface {
         }*/
     }
 
-
+    //TODO
     @Override
     public void delete(String path) {
         // <Version> DELETE <SenderId> <FileId> <CRLF><CRLF>
-        /*File backupFile = new File(path);
-
-        if(!backupFile.exists()) {
+        File deleteFile = new File(path);
+        if(!deleteFile.exists()) {
             System.out.println("The file - " + path + " - doesn't exist.");
             return;
         }
-        
-        ArrayList<storage.FileManager> files = this.getStorage().getFilesStored();
-        ArrayList<String> filesNames = new ArrayList<String>();
 
-        for(int i = 0; i < files.size(); i++) {
-            filesNames.add(files.get(i).getPath());
+        FileManager fileManager = new FileManager(path, peerId);
+        String fileIDNew = fileManager.getFileID();
+
+        ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
+
+        ArrayList<FileManager> files = getStorage().getFilesStored();
+        ArrayList<String> filesNames = new ArrayList<>();
+
+        for(FileManager file : files) {
+            filesNames.add(file.getPath());
         }
 
         if(!filesNames.contains(path)){
             System.out.println("File " + path + " never backed up in this peer");
             return;
         }
+
+        for(FileManager file : files) {
+            if(file.getPath().equals(path)) {
+                // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
+                for(int j = 0; j<5; j++) {
+                    Chunk chunk = fileChunks.get(j);
+                    MessageBuilder messageBuilder = new MessageBuilder();
+                    byte[] message = messageBuilder.constructPutChunkMessage(this, fileIDNew, chunk);
+
+                    try {
+                        //send delete message
+                        NodeInfo receiver;
+                        if(j < this.chordNode.getFingerTableLength()) {
+                            receiver = this.chordNode.getFingerTable().get(j);
+                        }
+                        else {
+                            receiver = this.chordNode.getSuccessor();
+                        }
+
+                        // send threads
+                        threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
+
+
+                    } catch(Exception e) {
+                        System.err.println(e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+                getStorage().deleteFile(file);
+            }
+        }
+
+        /*
 
         for(int i = 0; i < files.size(); i++) {
             if(files.get(i).getPath().equals(path)) {

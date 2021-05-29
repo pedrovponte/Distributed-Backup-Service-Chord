@@ -1,6 +1,17 @@
-# 2 package depth
+peer1:
+	@cd build/
+	java Peer 1.0 1 Peer1 6001
+
+peer2:
+	cd build/
+	java Peer 1.0 2 Peer2 6002 127.0.1.1 6001
+
+peer3:
+	cd build/
+	java Peer 1.0 3 Peer3 6003 127.0.1.1 6002
+
 all: mkdir
-	javac -d build/ src/*.java src/*/*.java src/*/*/*.java
+	javac -d build/ src/*.java #src/*/*.java src/*/*/*.java
 
 mkdir:
 	@mkdir -p build/
@@ -30,3 +41,4 @@ reclaim:
 
 state:
 	@bash scripts/state.sh $(ACCESS_POINT)
+
