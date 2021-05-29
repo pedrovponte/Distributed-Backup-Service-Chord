@@ -7,6 +7,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.*;
+import java.util.Arrays;
 
 public class ChannelController implements Runnable {
     private int port;
@@ -43,6 +44,16 @@ public class ChannelController implements Runnable {
 
         ssf = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
+        int i;
+        for(i = 0; i < message.length; i++) {
+            if(message[i] == 0xD && message[i + 1] == 0xA && message[i + 2] == 0xD && message[i + 3] == 0xA) {
+                break;
+            }
+        }
+
+        byte[] h = Arrays.copyOfRange(message, 0, i);
+        String[] header = new String(h).split(" ");
+
         try {
             socket = (SSLSocket) ssf.createSocket(this.ipAddress, this.port);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -52,8 +63,21 @@ public class ChannelController implements Runnable {
             System.out.println("SEND MESSAGE"); // sera necessario fazer Thread.sleep()?
             socket.close();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
+            
+            switch(header[1]) {
+                case "FINDPRED":
+                    Peer.getChordNode().recoverStabilize();
+                    break;
+                case "CHECKPRED":
+                    Peer.getChordNode().setPredecessor(null);
+                    break;
+                default:
+                    /*System.err.println(e.getMessage());
+                    e.printStackTrace();
+                    break;*/
+                    System.out.println("FAILED");
+                    break;
+            }   
         }
     }
 

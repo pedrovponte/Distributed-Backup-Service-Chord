@@ -43,11 +43,11 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "PUTCHUNK":
-
+                Peer.getThreadExec().execute(new PutChunkMessageThread(this.message));
                 break;
 
             case "STORED":
-
+                Peer.getThreadExec().execute(new StoredMessageThread(this.message));
                 break;
 
             case "DELETE":

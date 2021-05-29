@@ -2,10 +2,12 @@ import java.net.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.io.*;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 
@@ -208,7 +210,7 @@ public class Peer implements RemoteInterface {
     }
 
     
-    public FileStorage getStorage() {
+    public static FileStorage getStorage() {
         return storage;
     }
 
@@ -285,32 +287,42 @@ public class Peer implements RemoteInterface {
 
         for(int i = 0; i < fileChunks.size(); i++) {
             // <Version> PUTCHUNK <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF><Body>
-            String header = this.protocolVersion + " PUTCHUNK " + peerId + " " + fileManager.getFileID() + " " + fileChunks.get(i).getChunkNo() + " " + fileChunks.get(i).getReplication() + " \r\n\r\n";
-            
             try {
-                byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
-                byte[] body = fileChunks.get(i).getChunkMessage();
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-                outputStream.write(headerBytes);
-                outputStream.write(body);
-                byte[] message = outputStream.toByteArray();
-                
-                if(!(storage.hasRegisterStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo()))) {
-                    storage.createRegisterToStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo());
+                Chunk chunk = fileChunks.get(i);
+
+                MessageBuilder messageBuilder = new MessageBuilder();
+                byte[] message = messageBuilder.constructPutChunkMessage(this, fileIDNew, chunk);
+
+                if(!(storage.hasRegisterStore(fileManager.getFileID(), chunk.getChunkNo()))) {
+                    storage.createRegisterToStore(fileManager.getFileID(), chunk.getChunkNo());
                 }
 
-                // send threads
-                //this.threadExec.execute(new ThreadSendMessages(this.MDB, message));
-                //this.threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
+                for(int j = 1; j <= chunk.getReplication(); j++) {
+                    NodeInfo receiver;
+                    if(j < this.chordNode.getFingerTableLength()) {
+                        receiver = this.chordNode.getFingerTable().get(j);
+                    }
+                    else {
+                        receiver = this.chordNode.getSuccessor();
+                    }
+                    
+                    // send threads
+                    threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
+                    //threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
+                    
+                    
+                }
+                
 
-                System.out.println("SENT: "+ header);
-            } catch(UnsupportedEncodingException e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
-            } catch(IOException e) {
+
+                
+            }
+            catch (Exception e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace();
             }
+
+            
         }
 
 
@@ -638,4 +650,17 @@ public class Peer implements RemoteInterface {
             i.printStackTrace();
         }
     }
+
+    public byte[] hashChunkIdentifier(String fileId, int chunkNo, int replication) {
+        String id = fileId + chunkNo + replication;
+        try{
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] encodedHash = digest.digest(id.getBytes(StandardCharsets.UTF_8));
+            
+            return encodedHash;
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        } 
+    }
+
 }

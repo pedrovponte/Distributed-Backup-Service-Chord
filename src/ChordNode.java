@@ -17,7 +17,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.*;
 
-public class ChordNode {
+public class ChordNode {    
     private final static int M = 128; // m-bit identifier
     private final static int N = (int) Math.pow(2, M); // maximum number of nodes of the circle
     private final static int R = (int) Math.log10(N); // routing entries
@@ -65,6 +65,21 @@ public class ChordNode {
     }
 
 
+    public NodeInfo getSuccessor() {
+        return this.successor;
+    }
+
+
+    public int getFingerTableLength() {
+        return this.fingerTable.length();
+    }
+
+
+    public AtomicReferenceArray<NodeInfo> getFingerTable() {
+        return this.fingerTable;
+    }
+
+
     public void initFingerTable() {
         for(int i = 0; i < M; i++) {
             this.fingerTable.set(i, this.nodeInfo);
@@ -93,11 +108,13 @@ public class ChordNode {
     public void setSuccessor(NodeInfo node) {
         //System.out.println("SET SUCCESSOR");
         this.successor = node;
+        System.out.println("SUCCESSOR: " + this.successor);
     }
 
 
     public void setPredecessor(NodeInfo node) {
         this.predecessor = node;
+        System.out.println("PREDECESSOR: " + this.predecessor);
     }
 
 
@@ -157,12 +174,16 @@ public class ChordNode {
         }*/
         
         System.out.println("INSIDE FIND SUCCESSOR");
+        System.out.println("NODEID: " + nodeId);
 
         if(this.nodeInfo.getNodeId().equals(this.successor.getNodeId())) { // existe apenas um nó, por isso o sucessor é igual ao próprio nó
+            System.out.println("HEREEEEEEEEEEEEE");
             //System.out.println("INSIDE FIRST IF");
             if(!nodeId.equals(this.nodeInfo.getNodeId())) { // o nó que procura o sucessor não é o mesmo que o que recebe a mensagem 
                 this.predecessor = new NodeInfo(nodeId, new InetSocketAddress(ipAddress, port));
+                System.out.println("PREDECESSOR1: " + this.predecessor);
                 this.successor = new NodeInfo(nodeId, new InetSocketAddress(ipAddress, port));
+                System.out.println("SUCCESSOR1: " + this.successor);
                 this.fingerTable.set(0, this.successor);
             }
             return this.nodeInfo; // o sucessor do nó que o procura é este, assim como o sucessor deste nó é o nó que estava a procura de sucessor
@@ -178,13 +199,14 @@ public class ChordNode {
             //System.out.println("INSIDE ELSE");
             NodeInfo n = closestPrecedingNode(nodeId);
 
-            if(this.nodeInfo.getNodeId() == n.getNodeId()) {
+            if(this.nodeInfo.getNodeId().equals(n.getNodeId())) {
                 return this.nodeInfo;
             }
 
             MessageBuilder messageBuilder = new MessageBuilder();
-            byte[] message = messageBuilder.constructFindSuccessorMessage(this.nodeInfo);
-            Peer.getThreadExec().execute(new ThreadSendMessages(n.getSocketAddress().getAddress().getHostAddress(), n.getSocketAddress().getPort(), message));
+            NodeInfo newNode = new NodeInfo(nodeId, new InetSocketAddress(ipAddress, port));
+            byte[] message = messageBuilder.constructFindSuccessorMessage(newNode);
+            Peer.getThreadExec().execute(new ThreadSendMessages(n.getSocketAddress().getHostName(), n.getSocketAddress().getPort(), message));
 
             return null;
         }
@@ -234,12 +256,18 @@ public class ChordNode {
         
         System.out.println("STABILIZE");
 
+        System.out.println("SUCC: " + this.successor);
+        System.out.println("PRED: " + this.predecessor);
+
         if(this.nodeInfo.getNodeId().equals(this.fingerTable.get(0).getNodeId()) && this.nodeInfo.getIp().equals(this.fingerTable.get(0).getIp()) && this.nodeInfo.getPort() == this.fingerTable.get(0).getPort()) {
+            System.out.println("EQUALSSS");
             this.succPred = this.predecessor;
         }
         else {
+            System.out.println("ELSE STABILIZE");
             MessageBuilder messageBuilder = new MessageBuilder();
             byte[] message = messageBuilder.constructFindPredecessorMessage(this.nodeInfo);
+            System.out.println("FINGER TABLE 0: " + this.fingerTable.get(0));
             Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getIp(), this.fingerTable.get(0).getPort(), message));
             
             try {
@@ -252,25 +280,94 @@ public class ChordNode {
             this.stabilizeCountDownLatch = new CountDownLatch(1);
         }
 
+        System.out.println("BEFORE IF SUCCPRED");
         if(this.succPred != null) {
-            if(compareNodeIds(this.nodeInfo.getNodeId(), this.succPred.getNodeId(), this.fingerTable.get(0).getNodeId())) {
+            if(compareNodeIds(this.nodeInfo.getNodeId(), this.succPred.getNodeId(), this.successor.getNodeId())) {
                 this.successor = this.succPred;
                 this.fingerTable.set(0, this.succPred);
+                System.out.println("SUCCESSOR2: " + this.successor);
             }
         }
 
-        MessageBuilder messageBuilder = new MessageBuilder();
-        byte[] message = messageBuilder.constructNotifyMessage(this.nodeInfo);
-        Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getSocketAddress().getAddress().getHostAddress(), this.fingerTable.get(0).getSocketAddress().getPort(), message));
+        System.out.println("BEFORE NOTIFY");
+        MessageBuilder messageB = new MessageBuilder();
+        byte[] m = messageB.constructNotifyMessage(this.nodeInfo);
+        Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getSocketAddress().getAddress().getHostAddress(), this.fingerTable.get(0).getSocketAddress().getPort(), m));
     }
+
+
+    public void recoverStabilize() {
+        System.out.println("RECOVERINGGGG");
+        int newSuccessorIndex = -1;
+        NodeInfo actualSuccessor = this.successor;
+
+        for(int i = 1; i < this.fingerTable.length(); i++) {
+            if(this.fingerTable.get(i).getNodeId().equals(this.successor.getNodeId())) {
+                continue;
+            }
+
+            newSuccessorIndex = i;
+            break;
+        }
+
+        if(newSuccessorIndex != -1) {
+            this.successor = this.fingerTable.get(newSuccessorIndex);
+        }
+        else {
+            //this.successor = this.nodeInfo;
+            if(actualSuccessor.getNodeId().equals(this.predecessor.getNodeId())) {
+                this.successor = this.nodeInfo;
+            }
+            else {
+                this.successor = this.predecessor;
+            }
+        }
+
+        for(int i = 0; i < this.fingerTable.length(); i++) {
+            if(this.fingerTable.get(i).getNodeId().equals(actualSuccessor.getNodeId())) {
+                this.fingerTable.set(i, this.successor);
+            }
+        }
+
+        decrementStabilizeCountDownLatch();
+
+    }
+
 
     public void notify(NodeInfo node) {
         // When receiving notify(p) at n:
         /*if (pred = nil or p in (pred, n]) then
             set pred := p*/
+        if(this.predecessor == null || compareNodeIds(this.predecessor.getNodeId(), node.getNodeId(), this.nodeInfo.getNodeId()) || !this.predecessor.getNodeId().equals(this.nodeInfo.getNodeId())) {
+            System.out.println("LELELELE: " + node.getNodeId());
+            if(node.getNodeId().equals(this.nodeInfo.getNodeId())) {
+                return;
+            }
 
-        if(this.predecessor == null || compareNodeIds(this.predecessor.getNodeId(), node.getNodeId(), this.successor.getNodeId())) {
-            this.predecessor = node;
+            System.out.println("NOTIFY PRED: " + (this.predecessor == null));
+            if(this.predecessor == null) {
+                System.out.println("INSIDE IF NOTIFY PRED: " + this.predecessor);
+                this.predecessor = node;
+                System.out.println("PREDECESSOR3: " + this.predecessor);
+
+
+                if(this.successor.getNodeId().equals(this.nodeInfo.getNodeId())) {
+                    this.successor = node;
+                    this.fingerTable.set(0, node);
+                    System.out.println("SUCCESSOR3: " + this.successor);
+                }
+            }
+            else if(!node.getNodeId().equals(this.predecessor.getNodeId())) {
+                this.predecessor = node;
+                System.out.println("PREDECESSOR4: " + this.predecessor);
+
+
+                if(this.successor.getNodeId().equals(this.nodeInfo.getNodeId())) {
+                    this.successor = node;
+                    this.fingerTable.set(0, node);
+                    System.out.println("SUCCESSOR4: " + this.successor);
+                }
+            }
         }
     }
 
@@ -300,6 +397,13 @@ public class ChordNode {
         NodeInfo node = findSuccessor(this.nodeInfo.getIp(), this.nodeInfo.getPort(), finger); // duvida aqui no address e port
 
         this.fingerTable.set(this.next, node);
+
+
+        for(int i = 0; i < M; i++) {
+            System.out.println("FINGER " + i + ": " + this.fingerTable.get(i));
+        }
+
+
     }
 
 
@@ -313,6 +417,7 @@ public class ChordNode {
 
         if(this.predecessor != null && !checkPredecessorAlive()) {
             this.predecessor = null;
+            System.out.println("PREDECESSOR DEAD");
         }
 
     }

@@ -18,7 +18,7 @@ public class FindSuccThread implements Runnable {
         String address = header[3];
         int port = Integer.parseInt(header[4]);
 
-        NodeInfo nodeInfo = Peer.getChordNode().findSuccessor(address, port, nodeId); // retornar NodeInfo ou ChordNode?
+        NodeInfo nodeInfo = Peer.getChordNode().findSuccessor(address, port, nodeId);
 
         if(nodeInfo != null) {
             MessageBuilder messageBuilder = new MessageBuilder();

@@ -1,3 +1,8 @@
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+
 public class MessageBuilder {
     public MessageBuilder() {
 
@@ -64,12 +69,57 @@ public class MessageBuilder {
     // <Version> PUTCHUNK <SenderId> <Address> <Port> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF> <Body>
     public byte[] constructPutChunkMessage(Peer peer, String fileId, Chunk chunk) {
         //System.out.println("INSIDE PUTCHUNK MESSAGE");
+        String version = peer.getProtocolVersion();
         int peerId = peer.getPeerId();
         String address = peer.getAddress().getHostAddress();
         int port = peer.getTcpPort();
         int chunkNo = chunk.getChunkNo();
         int replication = chunk.getReplication();
-        String message = "";
+        String header = version + " PUTCHUNK " + peerId + " " + address + " " + port + " " + fileId + " " + chunkNo + " " + replication + "\r\n\r\n";
+        
+        try {
+            byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
+            byte[] body = chunk.getChunkMessage();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(headerBytes);
+            outputStream.write(body);
+            byte[] message = outputStream.toByteArray();
+            System.out.println("SENT: "+ header);
+
+            return message;
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        } 
+
+        return null;
+    }
+
+    // <Version> PUTCHUNK <SenderId> <Address> <Port> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF> <Body>
+    public byte[] constructPutChunkMessage(String address, int port, String fileId, int chunkNo, int replication_degree, byte[] body) {
+        String header = "1.0 PUTCHUNK " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + " " + replication_degree + "\r\n\r\n";
+
+        try {
+            byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(headerBytes);
+            outputStream.write(body);
+            byte[] message = outputStream.toByteArray();
+            System.out.println("SENT: "+ header);
+
+            return message;
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        } 
+
+        return null;
+    }
+
+    // Version STORED <SenderId> <Address> <Port> <FileId> <ChunkNo>
+    public byte[] constructStoredMessage(String address, int port, String fileId, int chunkNo) {
+        String message = "1.0 STORED " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        System.out.println("SENT: " + message);
         return message.getBytes();
     }
 }
