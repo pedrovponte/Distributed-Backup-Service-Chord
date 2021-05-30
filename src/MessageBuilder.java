@@ -101,7 +101,7 @@ public class MessageBuilder {
             outputStream.write(headerBytes);
             outputStream.write(body);
             byte[] message = outputStream.toByteArray();
-            System.out.println("SENT: "+ header);
+            System.out.println("SENT: " + header);
 
             return message;
         } catch(Exception e) {
@@ -122,7 +122,7 @@ public class MessageBuilder {
             outputStream.write(headerBytes);
             outputStream.write(body);
             byte[] message = outputStream.toByteArray();
-            System.out.println("SENT: "+ header);
+            System.out.println("SENT: " + header);
 
             return message;
         } catch(Exception e) {

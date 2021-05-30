@@ -284,7 +284,7 @@ public class Peer implements RemoteInterface {
                     storage.createRegisterToStore(fileManager.getFileID(), chunk.getChunkNo());
                 }
 
-                for(int j = 1; j <= chunk.getReplication(); j++) {
+                for(int j = 0; j < chunk.getReplication(); j++) {
                     NodeInfo receiver;
                     if(j < this.chordNode.getFingerTableLength()) {
                         receiver = this.chordNode.getFingerTable().get(j);
@@ -294,22 +294,14 @@ public class Peer implements RemoteInterface {
                     }
                     
                     // send threads
-                    threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
-                    //threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
-                    
-                    
-                }
-                
-
-
-                
+                    threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
+                    threadExec.schedule(new ThreadCountStored(replication, fileManager.getFileID(), i, message, receiver), 1, TimeUnit.SECONDS);
+                }                
             }
             catch (Exception e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace();
             }
-
-            
         }
 
 
@@ -445,6 +437,39 @@ public class Peer implements RemoteInterface {
             System.out.println("File " + path + " never backed up in this peer");
             return;
         }
+
+        for(FileManager file : files) {
+            if(file.getPath().equals(path)) {
+                // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
+                for(int j = 0; j<5; j++) {
+                    Chunk chunk = fileChunks.get(j);
+                    MessageBuilder messageBuilder = new MessageBuilder();
+                    byte[] message = messageBuilder.constructPutChunkMessage(this, fileIDNew, chunk);
+
+                    try {
+                        //send delete message
+                        NodeInfo receiver;
+                        if(j < this.chordNode.getFingerTableLength()) {
+                            receiver = this.chordNode.getFingerTable().get(j);
+                        }
+                        else {
+                            receiver = this.chordNode.getSuccessor();
+                        }
+
+                        // send threads
+                        threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
+
+
+                    } catch(Exception e) {
+                        System.err.println(e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+                getStorage().deleteFile(file);
+            }
+        }
+
+        /*
 
         for(int i = 0; i < files.size(); i++) {
             if(files.get(i).getPath().equals(path)) {

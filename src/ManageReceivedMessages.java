@@ -11,7 +11,7 @@ public class ManageReceivedMessages implements Runnable {
         System.out.println("INSIDE MESSAGE MANAGER");
         // message: <Version> <MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
         String[] header = this.message.getHeader();
-        System.out.println("MESSAGE: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
+        //System.out.println("MESSAGE: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
 
         switch (header[1]) {
             case "FINDSUCC":
