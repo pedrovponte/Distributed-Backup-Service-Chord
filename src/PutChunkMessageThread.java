@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.InetSocketAddress;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -33,8 +34,8 @@ public class PutChunkMessageThread implements Runnable {
 	@Override
 	public void run() {
         // casos em que é sucessor dele próprio como devem ser tratados? Nao faz backup?
-        if(this.senderId == Peer.getPeerId() && this.address.equals(Peer.getChordNode().getNodeInfo().getIp()) && this.port == Peer.getChordNode().getNodeInfo().getPort()) {
-            //System.out.println("Same peer as initiator. Can't backup chunk.");
+        if(this.address.equals(Peer.getChordNode().getNodeInfo().getIp()) && this.port == Peer.getChordNode().getNodeInfo().getPort()) {
+            System.out.println("Same peer as initiator. Can't backup chunk.");
             return;
         }
         
@@ -76,7 +77,7 @@ public class PutChunkMessageThread implements Runnable {
         }
 
 
-        Chunk chunk = new Chunk(this.fileId, this.chunkNo, this.body, this.replication_degree, this.body.length);
+        Chunk chunk = new Chunk(this.fileId, this.chunkNo, this.body, this.replication_degree, this.body.length, new InetSocketAddress(this.address, this.port));
 
         Peer.getStorage().addChunk(chunk);
 

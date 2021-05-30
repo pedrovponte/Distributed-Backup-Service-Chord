@@ -4,6 +4,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.io.*;
@@ -284,7 +286,7 @@ public class Peer implements RemoteInterface {
                     storage.createRegisterToStore(fileManager.getFileID(), chunk.getChunkNo());
                 }
 
-                for(int j = 0; j < chunk.getReplication(); j++) {
+                for(int j = 0; j < replication; j++) {
                     NodeInfo receiver;
                     if(j < this.chordNode.getFingerTableLength()) {
                         receiver = this.chordNode.getFingerTable().get(j);
@@ -303,63 +305,6 @@ public class Peer implements RemoteInterface {
                 e.printStackTrace();
             }
         }
-
-
-        /*File backupFile = new File(path);
-
-        if(!backupFile.exists()) {
-            System.out.println("The file - " + path + " - doesn't exist.");
-            return;
-        }
-
-        FileManager fileManager = new FileManager(path, replication, peerId);
-
-        String fileIDNew = fileManager.getFileID();
-
-        for(int i = 0; i < storage.getFilesStored().size(); i++) {
-            if(storage.getFilesStored().get(i).getFileID().equals(fileIDNew)) {
-                System.out.println("File already backed up by this peer.");
-                return;
-            }
-        }
-
-        storage.addFile(fileManager);
-
-        if(storage.hasDeletedFile(fileManager.getFileID())) {
-            storage.removeDeletedFile(fileManager.getFileID());
-        }
-
-        ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
-
-        for(int i = 0; i < fileChunks.size(); i++) {
-            // <Version> PUTCHUNK <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF><Body>
-            String header = this.protocolVersion + " PUTCHUNK " + peerId + " " + fileManager.getFileID() + " " + fileChunks.get(i).getChunkNo() + " " + fileChunks.get(i).getReplication() + " \r\n\r\n";
-            
-            try {
-                byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
-                byte[] body = fileChunks.get(i).getChunkMessage();
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-                outputStream.write(headerBytes);
-                outputStream.write(body);
-                byte[] message = outputStream.toByteArray();
-                
-                if(!(storage.hasRegisterStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo()))) {
-                    storage.createRegisterToStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo());
-                }
-
-                // send threads
-                this.threadExec.execute(new ThreadSendMessages(this.MDB, message));
-                this.threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
-
-                System.out.println("SENT: "+ header);
-            } catch(UnsupportedEncodingException e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
-            } catch(IOException e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
-            }
-        }*/
     }
 
 
@@ -510,6 +455,56 @@ public class Peer implements RemoteInterface {
     @Override
     public void reclaim(int maximum_disk_space) {
         // <Version> REMOVED <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+        int max_space = maximum_disk_space * 1000;
+
+        storage.setCapacity(max_space);
+
+        int occupiedSpace = storage.getPeerOccupiedSpace();
+
+        int spaceToFree = occupiedSpace - max_space;
+
+        if(spaceToFree > 0) {
+            ConcurrentHashMap<String, Chunk> chunksStored = this.getStorage().getChunksStored();
+            ArrayList<Chunk> chunks = new ArrayList<>();
+
+            for(String key : chunksStored.keySet()) {
+                chunks.add(chunksStored.get(key));
+            }
+
+            // descendant ordered list to start delete biggest chunks first
+            Collections.sort(chunks, Comparator.comparing(Chunk::getSize));
+            Collections.reverse(chunks);
+
+            for(int i = 0; i < chunks.size(); i++) {
+                String chunkId = chunks.get(i).getFileId() + "_" + chunks.get(i).getChunkNo();
+                storage.deleteChunk(chunkId);
+                
+                MessageBuilder messageBuilder = new MessageBuilder();
+                byte[] message = messageBuilder.constructRemovedMessage(this, chunks.get(i).getFileId(), chunks.get(i).getChunkNo());
+                
+                try {
+                    threadExec.execute(new ThreadSendMessages(chunks.get(i).getIp(), chunks.get(i).getPort(), message));
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                    e.printStackTrace();
+                }
+
+                spaceToFree -= chunks.get(i).getSize();
+
+                String name = "peer_" + peerId + "/backup/" + chunkId;
+
+                File filename = new File(name);
+
+                filename.delete();
+
+                if(spaceToFree <= 0) {
+                    return;
+                }
+            }
+        }        
+
+
+
         /*int max_space = maximum_disk_space * 1000;
 
         storage.setCapacity(max_space);

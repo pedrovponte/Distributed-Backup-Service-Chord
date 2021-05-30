@@ -139,4 +139,11 @@ public class MessageBuilder {
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
+
+    // Version REMOVED <SenderId> <Address> <Port> <FileId> <ChunkNo>
+    public byte[] constructRemovedMessage(Peer peer, String fileId, int chunkNo) {
+        String message = "1.0 REMOVED " + peer.getPeerId() + " " + peer.getChordNode().getNodeInfo().getIp() + " " + peer.getChordNode().getNodeInfo().getPort() + " " + fileId + " " + chunkNo + "\r\n\r\n";
+        System.out.println("SENT: " + message);
+        return message.getBytes();
+    }
 }

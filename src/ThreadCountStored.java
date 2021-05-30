@@ -23,11 +23,14 @@ public class ThreadCountStored implements Runnable {
 	@Override
 	public void run() {
         ConcurrentHashMap<String, ArrayList<InetSocketAddress>> distribution = Peer.getStorage().getBackupChunksDistribution();
+        //System.out.println("DIST: " + distribution);
         String chunkId = this.fileId + "_" + this.chunkNo;
         int storedReplications = 0;
-
-        if(distribution.contains(chunkId)) {
+        //System.out.println("CHUNKID: " + chunkId);
+        //System.out.println("CONTAINS: " + distribution.containsKey(chunkId));
+        if(distribution.containsKey(chunkId)) {
             storedReplications = distribution.get(chunkId).size();
+            //System.out.println("REPLICATIONSSS: " + storedReplications);
         }
 
         if(storedReplications < this.replication && this.tries < 4) {
