@@ -4,6 +4,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.io.*;
@@ -59,15 +61,6 @@ public class Peer implements RemoteInterface {
             storage = new FileStorage();
         }
 
-        //this.TCPport = 6000 + peerId;
-
-        /*try {
-            this.serverSocket = new ServerSocket(this.TCPport);
-        } catch(Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }*/
-
 
         ConcurrentHashMap<String, Integer> stored = this.getStorage().getStoredMessagesReceived();
         System.out.println("-------STORED-------");
@@ -96,7 +89,6 @@ public class Peer implements RemoteInterface {
 
         chordNode = new ChordNode(this.address.getHostAddress(), this.tcpPort);
 
-        System.out.println("BEFORE IF");
 
         try {
             Thread.sleep(1000);
@@ -106,15 +98,12 @@ public class Peer implements RemoteInterface {
         }
 
         if(args.length == 4) {
-            System.out.println("INSIDE FIRST IF");
             chordNode.create();
         }
         else if(args.length == 6) {
-            System.out.println("INSIDE ELSE IF");
             chordNode.join(args[4], Integer.parseInt(args[5]));
         }
 
-        System.out.println("AFTER IFS");
         // chamar as atualizaçoes aqui ou no create?
     }
 
@@ -297,7 +286,7 @@ public class Peer implements RemoteInterface {
                     storage.createRegisterToStore(fileManager.getFileID(), chunk.getChunkNo());
                 }
 
-                for(int j = 1; j <= chunk.getReplication(); j++) {
+                for(int j = 0; j < replication; j++) {
                     NodeInfo receiver;
                     if(j < this.chordNode.getFingerTableLength()) {
                         receiver = this.chordNode.getFingerTable().get(j);
@@ -307,80 +296,15 @@ public class Peer implements RemoteInterface {
                     }
                     
                     // send threads
-                    threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
-                    //threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
-                    
-                    
-                }
-                
-
-
-                
+                    threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
+                    threadExec.schedule(new ThreadCountStored(replication, fileManager.getFileID(), i, message, receiver), 1, TimeUnit.SECONDS);
+                }                
             }
             catch (Exception e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace();
             }
-
-            
         }
-
-
-        /*File backupFile = new File(path);
-
-        if(!backupFile.exists()) {
-            System.out.println("The file - " + path + " - doesn't exist.");
-            return;
-        }
-
-        FileManager fileManager = new FileManager(path, replication, peerId);
-
-        String fileIDNew = fileManager.getFileID();
-
-        for(int i = 0; i < storage.getFilesStored().size(); i++) {
-            if(storage.getFilesStored().get(i).getFileID().equals(fileIDNew)) {
-                System.out.println("File already backed up by this peer.");
-                return;
-            }
-        }
-
-        storage.addFile(fileManager);
-
-        if(storage.hasDeletedFile(fileManager.getFileID())) {
-            storage.removeDeletedFile(fileManager.getFileID());
-        }
-
-        ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
-
-        for(int i = 0; i < fileChunks.size(); i++) {
-            // <Version> PUTCHUNK <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF><Body>
-            String header = this.protocolVersion + " PUTCHUNK " + peerId + " " + fileManager.getFileID() + " " + fileChunks.get(i).getChunkNo() + " " + fileChunks.get(i).getReplication() + " \r\n\r\n";
-            
-            try {
-                byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
-                byte[] body = fileChunks.get(i).getChunkMessage();
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-                outputStream.write(headerBytes);
-                outputStream.write(body);
-                byte[] message = outputStream.toByteArray();
-                
-                if(!(storage.hasRegisterStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo()))) {
-                    storage.createRegisterToStore(fileManager.getFileID(), fileChunks.get(i).getChunkNo());
-                }
-
-                // send threads
-                this.threadExec.execute(new ThreadSendMessages(this.MDB, message));
-                this.threadExec.schedule(new ThreadCountStored(this, replication, fileManager.getFileID(), i, this.MDB, message), 1, TimeUnit.SECONDS);
-
-                System.out.println("SENT: "+ header);
-            } catch(UnsupportedEncodingException e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
-            } catch(IOException e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
-            }
-        }*/
     }
 
     //TODO
@@ -440,101 +364,102 @@ public class Peer implements RemoteInterface {
     @Override
     public void delete(String path) {
         // <Version> DELETE <SenderId> <FileId> <CRLF><CRLF>
-        File deleteFile = new File(path);
-        if(!deleteFile.exists()) {
-            System.out.println("The file - " + path + " - doesn't exist.");
+        if(!new File(path).exists()) {
+            System.out.println("The file '" + path + "' doesn't exist.");
             return;
         }
 
         FileManager fileManager = new FileManager(path, peerId);
-        String fileIDNew = fileManager.getFileID();
-
+        String fileID = fileManager.getFileID();
         ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
-
         ArrayList<FileManager> files = getStorage().getFilesStored();
         ArrayList<String> filesNames = new ArrayList<>();
 
-        for(FileManager file : files) {
-            filesNames.add(file.getPath());
-        }
+        // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
+        ArrayList<Chunk> file_chunks = fileManager.getFileChunks();
+        for (Chunk chunk : file_chunks) {
+            for(int j = 0; j<5; j++) {
+                MessageBuilder messageBuilder = new MessageBuilder();
+                byte[] message = messageBuilder.constructDeleteMessage(peer.getAddress().getHostAddress(), peer.getTcpPort(), fileID, chunk.getChunkNo());
 
-        if(!filesNames.contains(path)){
-            System.out.println("File " + path + " never backed up in this peer");
-            return;
-        }
+                try {
+                    //send delete message
+                    NodeInfo receiver;
+                    if(j < chordNode.getFingerTableLength()) receiver = chordNode.getFingerTable().get(j);
+                    else receiver = chordNode.getSuccessor();
 
-        for(FileManager file : files) {
-            if(file.getPath().equals(path)) {
-                // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
-                for(int j = 0; j<5; j++) {
-                    Chunk chunk = fileChunks.get(j);
-                    MessageBuilder messageBuilder = new MessageBuilder();
-                    byte[] message = messageBuilder.constructPutChunkMessage(this, fileIDNew, chunk);
-
-                    try {
-                        //send delete message
-                        NodeInfo receiver;
-                        if(j < this.chordNode.getFingerTableLength()) {
-                            receiver = this.chordNode.getFingerTable().get(j);
-                        }
-                        else {
-                            receiver = this.chordNode.getSuccessor();
-                        }
-
-                        // send threads
-                        threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
-
-
-                    } catch(Exception e) {
-                        System.err.println(e.getMessage());
-                        e.printStackTrace();
-                    }
+                    // send threads
+                    //threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
+                    threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
+                } catch(Exception e) {
+                    System.err.println(e.getMessage());
+                    e.printStackTrace();
                 }
-                getStorage().deleteFile(file);
             }
         }
 
-        /*
+         if(!filesNames.contains(path)){
+              return;
+         }
 
-        for(int i = 0; i < files.size(); i++) {
-            if(files.get(i).getPath().equals(path)) {
-                // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
-                for(int j = 0; j < 5; j++) {
-                    String message = this.protocolVersion + " DELETE " + peerId + " " + files.get(i).getFileID() + " \r\n\r\n";
-                    try {
-                        this.threadExec.execute(new broadcast.ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
-
-                        System.out.println("SENT: " + message);
-                    } catch (Exception e) {
-                        System.err.println(e.getMessage());
-                        e.printStackTrace();
-                    }
-                }
-
-                ConcurrentHashMap<String,Integer> storedMessages = this.getStorage().getStoredMessagesReceived();
-                for(String key : storedMessages.keySet()) {
-                    for(int k = 0; k < files.get(i).getFileChunks().size(); k++) {
-                        String chunkId = files.get(i).getFileID() + "_" + k;
-                        if(key.equals(chunkId)) {
-                            this.getStorage().deleteStoreMessage(chunkId);
-                        }
-                    }
-                }
-
-                if(this.protocolVersion.equals("1.0")) {
-                    storage.deleteChunksDistribution(files.get(i).getFileID());
-                }
-
-                this.getStorage().deleteFile(files.get(i));
-                break;
-            }
-        }*/
+        //apagar ficheiro local
+        getStorage().deleteFile(fileManager);
     }
 
 
     @Override
     public void reclaim(int maximum_disk_space) {
         // <Version> REMOVED <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+        int max_space = maximum_disk_space * 1000;
+
+        storage.setCapacity(max_space);
+
+        int occupiedSpace = storage.getPeerOccupiedSpace();
+
+        int spaceToFree = occupiedSpace - max_space;
+
+        if(spaceToFree > 0) {
+            ConcurrentHashMap<String, Chunk> chunksStored = this.getStorage().getChunksStored();
+            ArrayList<Chunk> chunks = new ArrayList<>();
+
+            for(String key : chunksStored.keySet()) {
+                chunks.add(chunksStored.get(key));
+            }
+
+            // descendant ordered list to start delete biggest chunks first
+            Collections.sort(chunks, Comparator.comparing(Chunk::getSize));
+            Collections.reverse(chunks);
+
+            for(int i = 0; i < chunks.size(); i++) {
+                String chunkId = chunks.get(i).getFileId() + "_" + chunks.get(i).getChunkNo();
+                storage.deleteChunk(chunkId);
+                
+                MessageBuilder messageBuilder = new MessageBuilder();
+                byte[] message = messageBuilder.constructRemovedMessage(this, chunks.get(i).getFileId(), chunks.get(i).getChunkNo());
+                
+                try {
+                    threadExec.execute(new ThreadSendMessages(chunks.get(i).getIp(), chunks.get(i).getPort(), message));
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                    e.printStackTrace();
+                }
+
+                spaceToFree -= chunks.get(i).getSize();
+
+                String name = "peer_" + peerId + "/backup/" + chunkId;
+
+                File filename = new File(name);
+
+                filename.delete();
+
+                if(spaceToFree <= 0) {
+                    return;
+                }
+            }
+        }        
+
+
+
         /*int max_space = maximum_disk_space * 1000;
 
         storage.setCapacity(max_space);

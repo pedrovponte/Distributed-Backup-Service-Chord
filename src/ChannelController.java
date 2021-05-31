@@ -37,7 +37,7 @@ public class ChannelController implements Runnable {
 
     public void sendMessage(byte[] message) {
         // send request
-        System.out.println("INSIDE SEND MESSAGE");
+        //System.out.println("INSIDE SEND MESSAGE");
 
         SSLSocketFactory ssf;
         SSLSocket socket; 
@@ -60,7 +60,7 @@ public class ChannelController implements Runnable {
             out.flush();
             Message toSend = new Message(message);
             out.writeObject(toSend);
-            System.out.println("SEND MESSAGE"); // sera necessario fazer Thread.sleep()?
+            //System.out.println("SEND MESSAGE"); // sera necessario fazer Thread.sleep()?
             socket.close();
         } catch (Exception e) {
             
@@ -84,14 +84,14 @@ public class ChannelController implements Runnable {
 
     @SuppressWarnings("InfiniteLoopStatement")
     public void run() {
-        System.out.println("INSIDE RUN");
+        //System.out.println("INSIDE RUN");
 
         SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         SSLServerSocket serverSocket;
 
         try {
             serverSocket = (SSLServerSocket) ssf.createServerSocket(this.port);
-            System.out.println("CREATED SERVER");
+            //System.out.println("CREATED SERVER");
 
             while(true) {
                 SSLSocket socket = (SSLSocket) serverSocket.accept();

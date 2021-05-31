@@ -1,10 +1,13 @@
+#src/*/*.java src/*/*/*.java
 REP_DEG = 1
 NEW_SIZE = 0
-FILEPATH = "file.pdf"
-ACCESS_POINT = "1923"
+FILEPATH = "../../pinguim.png"
+ACCESS_POINT = "Peer1"
+
+
 
 all: mkdir
-	cd src; javac -d build/ *.java #src/*/*.java src/*/*/*.java
+	cd src; rm -rf build/peer_*; javac -d build/ *.java
 
 mkdir:
 	@mkdir -p src/build/
@@ -15,6 +18,12 @@ clean:
 rmi:
 	cd src/build; rmiregistry &
 
+kill:
+	@bash scripts/kill_rmi.sh
+
+
+
+
 # PEERS
 peer1:
 	cd src/build; java Peer 1.0 1 Peer1 6001
@@ -24,6 +33,9 @@ peer2:
 
 peer3:
 	cd src/build; java Peer 1.0 3 Peer3 6003 127.0.1.1 6002
+
+
+
 
 # CLIENT
 backup:

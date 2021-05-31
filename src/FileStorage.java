@@ -434,5 +434,12 @@ public class FileStorage implements java.io.Serializable {
         // }
         // System.out.println("--------------------------");
     }
+
+    public void removeBackupFileDistribution(String address, int port, String fileId, int chunkNo) {
+        String chunkId = fileId + "_" + chunkNo;
+        InetSocketAddress toRemove = new InetSocketAddress(address, port);
+
+        this.backupChunksDistribution.get(chunkId).remove(toRemove);
+    }
 }
 

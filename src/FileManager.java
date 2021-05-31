@@ -2,6 +2,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -111,7 +112,7 @@ public class FileManager implements java.io.Serializable {
             while((readBytes = bufferedInputStream.read(buf)) > 0) {
                 byte[] chunkMessage = Arrays.copyOf(buf, readBytes);
 
-                Chunk chunk = new Chunk(fileID, chunkNo, chunkMessage, this.replication, readBytes);
+                Chunk chunk = new Chunk(fileID, chunkNo, chunkMessage, this.replication, readBytes, new InetSocketAddress(Peer.getChordNode().getNodeInfo().getIp(), Peer.getChordNode().getNodeInfo().getPort()));
                 this.fileChunks.add(chunk);
 
                 buf = new byte[64000];
@@ -122,7 +123,7 @@ public class FileManager implements java.io.Serializable {
             // one, have the maximum size. The size of the last chunk is always shorter than that size. If the file size is a 
             // multiple of the chunk size, the last chunk has size 0
             if(this.file.length() % 64000 == 0) {
-                Chunk chunk = new Chunk(fileID, chunkNo, null, this.replication, 0);
+                Chunk chunk = new Chunk(fileID, chunkNo, null, this.replication, 0, new InetSocketAddress(Peer.getChordNode().getNodeInfo().getIp(), Peer.getChordNode().getNodeInfo().getPort()));
                 this.fileChunks.add(chunk);
                 chunkNo++;
             }

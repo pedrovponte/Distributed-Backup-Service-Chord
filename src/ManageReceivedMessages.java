@@ -8,10 +8,10 @@ public class ManageReceivedMessages implements Runnable {
     
     // checks the message type and then creates a new thread to treat that message
     public void run() {
-        System.out.println("INSIDE MESSAGE MANAGER");
+        //System.out.println("INSIDE MESSAGE MANAGER");
         // message: <Version> <MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
         String[] header = this.message.getHeader();
-        System.out.println("MESSAGE: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
+        //System.out.println("MESSAGE: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
 
         switch (header[1]) {
             case "FINDSUCC":
@@ -52,6 +52,7 @@ public class ManageReceivedMessages implements Runnable {
 
             case "DELETE":
 
+                System.out.println("received delete message");
                 break;
 
             case "GETCHUNK":
@@ -63,7 +64,7 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "REMOVED":
-
+                Peer.getThreadExec().execute(new RemovedMessageThread(this.message));
                 break;
 
             case "DELETED":
@@ -74,52 +75,7 @@ public class ManageReceivedMessages implements Runnable {
 
                 break;
         }
-        /*String[] messageStr = new String(this.message).split(" ");
-        // System.out.println("Manager message: " + messageStr);
-        switch (messageStr[1]){
-            case "PUTCHUNK":
-                Random r = new Random();
-                int low = 0;
-                int high = 400;
-                int result = r.nextInt(high-low) + low;
-                this.peer.getThreadExec().schedule(new PutChunkMessageThread(this.message, this.peer), result, TimeUnit.MILLISECONDS);
-                break;
 
-            case "STORED":
-                this.peer.getThreadExec().execute(new StoredMessageThread(this.message, this.peer));
-                break;
-
-            case "DELETE":
-                this.peer.getThreadExec().execute(new DeleteMessageThread(this.message, this.peer));
-                break;
-
-            case "GETCHUNK":
-                this.peer.getThreadExec().execute(new GetChunkMessageThread(this.message, this.peer));
-                break;
-
-            case "CHUNK":
-                this.peer.getThreadExec().execute(new ChunkMessageThread(this.message, this.peer));
-                break;
-
-            case "REMOVED":
-                this.peer.getThreadExec().execute(new RemovedMessageThread(this.message, this.peer));
-                break;
-
-            case "DELETED":
-                this.peer.getThreadExec().execute(new DeletedMessageThread(this.message, this.peer));
-                break;
-
-            case "WORKING":
-                this.peer.getThreadExec().execute(new WorkingMessageThread(this.message, this.peer));
-                break;
-            
-            case "CHUNKTCP":
-                this.peer.getThreadExec().execute(new ChunkTCPMessageThread(this.message, this.peer));
-                break;
-                
-            default:
-                break;
-        }*/
 
     }
     
