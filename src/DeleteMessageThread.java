@@ -28,7 +28,6 @@ public class DeleteMessageThread implements Runnable {
         System.out.println("PATH: "+path);
 
         if(new File(path).exists()) {
-
             FileManager fileManager = new FileManager(path, Peer.getPeerId());
             Peer.getStorage().deleteFile(fileManager);
             File f = new File(path);

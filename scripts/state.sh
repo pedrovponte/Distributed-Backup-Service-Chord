@@ -10,5 +10,5 @@ fi
 
 peer_ap=$1
 
-cd build/
-java Application "${peer_ap}" STATE
+cd src/build/
+java Client "${peer_ap}" STATE

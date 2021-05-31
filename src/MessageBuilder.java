@@ -170,4 +170,21 @@ public class MessageBuilder {
 
         return null;
     }
+
+    public byte[] constructChunkMessage(String address, int port, String fileId, int chunkNo, byte[] body) {
+        String header = "1.0 CHUNK " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + " \r\n\r\n";
+
+        try {
+            byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(headerBytes);
+            outputStream.write(body);
+            return outputStream.toByteArray();
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }

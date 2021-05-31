@@ -62,7 +62,7 @@ public class Peer implements RemoteInterface {
         }
 
 
-        ConcurrentHashMap<String, Integer> stored = this.getStorage().getStoredMessagesReceived();
+        ConcurrentHashMap<String, Integer> stored = getStorage().getStoredMessagesReceived();
         System.out.println("-------STORED-------");
         for(String key : stored.keySet()) {
             System.out.println("Key: " + key);
@@ -70,7 +70,7 @@ public class Peer implements RemoteInterface {
         }
         System.out.println("Total: " + stored.size());
 
-        ArrayList<FileManager> files = this.getStorage().getFilesStored();
+        ArrayList<FileManager> files = getStorage().getFilesStored();
         System.out.println("-------FILES-------");
         for(int i = 0; i < files.size(); i++) {
             System.out.println("Key: " + i);
@@ -78,7 +78,7 @@ public class Peer implements RemoteInterface {
         }
         System.out.println("Total: " + files.size());
 
-        ConcurrentHashMap<String, Chunk> chunks = this.getStorage().getChunksStored();
+        ConcurrentHashMap<String, Chunk> chunks = getStorage().getChunksStored();
         System.out.println("-------CHUNKS-------");
         for(String key : chunks.keySet()) {
             System.out.println("Key: " + key);
@@ -288,12 +288,8 @@ public class Peer implements RemoteInterface {
 
                 for(int j = 0; j < replication; j++) {
                     NodeInfo receiver;
-                    if(j < this.chordNode.getFingerTableLength()) {
-                        receiver = this.chordNode.getFingerTable().get(j);
-                    }
-                    else {
-                        receiver = this.chordNode.getSuccessor();
-                    }
+                    if(j < chordNode.getFingerTableLength()) receiver = chordNode.getFingerTable().get(j);
+                    else receiver = chordNode.getSuccessor();
                     
                     // send threads
                     threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
@@ -317,7 +313,7 @@ public class Peer implements RemoteInterface {
         }
 
         ArrayList<FileManager> files = getStorage().getFilesStored();
-        ArrayList<String> filesNames = new ArrayList<String>();
+        ArrayList<String> filesNames = new ArrayList<>();
 
         for(FileManager fileManager : files) {
             filesNames.add(fileManager.getPath());
@@ -339,74 +335,23 @@ public class Peer implements RemoteInterface {
         }
 
         ArrayList<Chunk> chunks = file.getFileChunks();
-        for(int i = 0; i < chunks.size(); i++) {
+        for(Chunk chunk : chunks) {
             try {
-                Chunk chunk = chunks.get(i);
                 MessageBuilder messageBuilder = new MessageBuilder();
                 byte[] message = messageBuilder.constructGetChunkMessage(peer.getAddress().getHostAddress(), peer.getTcpPort(), fileID, chunk.getChunkNo());
 
                 //send delete message
-//                NodeInfo receiver;
-//                if(j < chordNode.getFingerTableLength()) receiver = chordNode.getFingerTable().get(j);
-//                else receiver = chordNode.getSuccessor();
-
-                // send threads
-                //threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
-                //threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
-            }
-            catch(Exception e) {
+                for(ConcurrentHashMap.Entry<String, ArrayList<InetSocketAddress>> set : getStorage().getBackupChunksDistribution().entrySet()) {
+                    if(set.getKey().equals(fileID + "_" + chunk.getChunkNo())) {
+                        for(int j = 0; j<set.getValue().size(); j++)
+                            threadExec.execute(new ThreadSendMessages(set.getValue().get(j).getAddress().getHostAddress(), set.getValue().get(j).getPort(), message));
+                    }
+                }
+            } catch(Exception e) {
                 System.err.println("Caught exception while restoring");
                 e.printStackTrace();
             }
         }
-        //<Version> GETCHUNK <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
-        /*File backupFile = new File(path);
-
-        if(!backupFile.exists()) {
-            System.out.println("The file - " + path + " - doesn't exist.");
-            return;
-        }
-
-        if (this.protocolVersion.equals("2.0")){
-            this.tcpChannel = new TCPChannel(this.serverSocket, this);
-            this.threadExec.execute(tcpChannel);
-        }
-
-        ArrayList<storage.FileManager> files = this.getStorage().getFilesStored();
-        ArrayList<String> filesNames = new ArrayList<String>();
-
-        for(int i = 0; i < files.size(); i++) {
-            filesNames.add(files.get(i).getPath());
-        }
-
-        if(!filesNames.contains(path)){
-            System.out.println("File " + path + " never backed up in this peer");
-            return;
-        }
-
-        for(int i = 0; i < files.size(); i++) {
-            if(files.get(i).getPath().equals(path)) {
-                storage.addFileToRestore(files.get(i).getFileID());
-                for(int j = 0; j < files.get(i).getFileChunks().size(); j++) {
-                    String message = "";
-                    if (this.protocolVersion == "1.0") {
-                        message = this.protocolVersion + " GETCHUNK " + peerId + " " + files.get(i).getFileID() + " " + j + " \r\n\r\n";
-                    }
-                    else {
-                        message = this.protocolVersion + " GETCHUNK " + peerId + " " + files.get(i).getFileID() + " " + j + " " + this.TCPport + " \r\n\r\n";
-                    }
-                    try {
-                        this.threadExec.execute(new ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
-
-                        System.out.println("SENT: " + message);
-                    } catch (Exception e) {
-                        System.err.println(e.getMessage());
-                        e.printStackTrace();
-                    }
-                }
-                this.threadExec.schedule(new ManageRestoreThread(this, files.get(i)), 10, TimeUnit.SECONDS);
-            }
-        }*/
     }
 
     @Override
@@ -446,9 +391,7 @@ public class Peer implements RemoteInterface {
         }
 
         if(!filesNames.contains(path)) return;
-
-        //apagar ficheiro local
-        getStorage().deleteFile(fileManager);
+        getStorage().deleteFile(fileManager); //apagar ficheiro local
     }
 
 
@@ -464,7 +407,7 @@ public class Peer implements RemoteInterface {
         int spaceToFree = occupiedSpace - max_space;
 
         if(spaceToFree > 0) {
-            ConcurrentHashMap<String, Chunk> chunksStored = this.getStorage().getChunksStored();
+            ConcurrentHashMap<String, Chunk> chunksStored = getStorage().getChunksStored();
             ArrayList<Chunk> chunks = new ArrayList<>();
 
             for(String key : chunksStored.keySet()) {

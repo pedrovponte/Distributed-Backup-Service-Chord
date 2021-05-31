@@ -11,5 +11,5 @@ fi
 peer_ap=$1
 filepath=$2
 
-cd build/
-java Application "${peer_ap}" RESTORE "${filepath}"
+cd src/build/
+java Client "${peer_ap}" RESTORE "${filepath}"
