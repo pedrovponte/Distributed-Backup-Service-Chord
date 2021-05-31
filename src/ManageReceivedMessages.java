@@ -1,3 +1,6 @@
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
 public class ManageReceivedMessages implements Runnable {
     private Message message;
 
@@ -43,7 +46,12 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "PUTCHUNK":
-                Peer.getThreadExec().execute(new PutChunkMessageThread(this.message));
+                Random r = new Random();
+                int low = 0;
+                int high = 400;
+                int result = r.nextInt(high-low) + low;
+
+                Peer.getThreadExec().schedule((new PutChunkMessageThread(this.message)), result, TimeUnit.MILLISECONDS);
                 break;
 
             case "STORED":

@@ -298,7 +298,7 @@ public class Peer implements RemoteInterface {
                     // send threads
                     threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
                     threadExec.schedule(new ThreadCountStored(replication, fileManager.getFileID(), i, message, receiver), 1, TimeUnit.SECONDS);
-                }                
+                }
             }
             catch (Exception e) {
                 System.err.println(e.getMessage());
@@ -345,9 +345,14 @@ public class Peer implements RemoteInterface {
                 MessageBuilder messageBuilder = new MessageBuilder();
                 byte[] message = messageBuilder.constructGetChunkMessage(peer.getAddress().getHostAddress(), peer.getTcpPort(), fileID, chunk.getChunkNo());
 
-//                if(!(storage.hasRegisterStore(fileManager.getFileID(), chunk.getChunkNo()))) {
-//                    storage.createRegisterToStore(fileManager.getFileID(), chunk.getChunkNo());
-//                }
+                //send delete message
+//                NodeInfo receiver;
+//                if(j < chordNode.getFingerTableLength()) receiver = chordNode.getFingerTable().get(j);
+//                else receiver = chordNode.getSuccessor();
+
+                // send threads
+                //threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
+                //threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
             }
             catch(Exception e) {
                 System.err.println("Caught exception while restoring");
@@ -404,7 +409,6 @@ public class Peer implements RemoteInterface {
         }*/
     }
 
-    //TODO
     @Override
     public void delete(String path) {
         // <Version> DELETE <SenderId> <FileId> <CRLF><CRLF>
@@ -420,21 +424,20 @@ public class Peer implements RemoteInterface {
         ArrayList<String> filesNames = new ArrayList<>();
 
         // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
-        ArrayList<Chunk> file_chunks = fileManager.getFileChunks();
-        for (Chunk chunk : file_chunks) {
-            for(int j = 0; j<5; j++) {
+        ArrayList<Chunk> chunks = fileManager.getFileChunks();
+        for (Chunk chunk : chunks) {
+            for(int i = 0; i < 5; i++) {
                 MessageBuilder messageBuilder = new MessageBuilder();
                 byte[] message = messageBuilder.constructDeleteMessage(peer.getAddress().getHostAddress(), peer.getTcpPort(), fileID, chunk.getChunkNo());
 
                 try {
                     //send delete message
-                    NodeInfo receiver;
-                    if(j < chordNode.getFingerTableLength()) receiver = chordNode.getFingerTable().get(j);
-                    else receiver = chordNode.getSuccessor();
-
-                    // send threads
-                    //threadExec.execute(new ThreadSendMessages(receiver.getSocketAddress().getHostName(), receiver.getSocketAddress().getPort(), message));
-                    threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
+                    for(ConcurrentHashMap.Entry<String, ArrayList<InetSocketAddress>> set : getStorage().getBackupChunksDistribution().entrySet()) {
+                        if(set.getKey().equals(fileID + "_" + chunk.getChunkNo())) {
+                            for(int j=0; j < set.getValue().size(); j++)
+                                threadExec.execute(new ThreadSendMessages(set.getValue().get(j).getAddress().getHostAddress(), set.getValue().get(j).getPort(), message));
+                        }
+                    }
                 } catch(Exception e) {
                     System.err.println(e.getMessage());
                     e.printStackTrace();
@@ -442,9 +445,7 @@ public class Peer implements RemoteInterface {
             }
         }
 
-         if(!filesNames.contains(path)){
-              return;
-         }
+        if(!filesNames.contains(path)) return;
 
         //apagar ficheiro local
         getStorage().deleteFile(fileManager);

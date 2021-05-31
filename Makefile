@@ -1,7 +1,7 @@
 #src/*/*.java src/*/*/*.java
 REP_DEG = 1
 NEW_SIZE = 0
-FILEPATH = "../../file1.pdf"
+FILEPATH = "../../file.pdf"
 ACCESS_POINT = "Peer1"
 
 

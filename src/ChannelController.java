@@ -61,6 +61,15 @@ public class ChannelController implements Runnable {
             Message toSend = new Message(message);
             out.writeObject(toSend);
             //System.out.println("SEND MESSAGE"); // sera necessario fazer Thread.sleep()?
+            
+            try {
+                Thread.sleep(1000);
+            } catch(Exception e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+            }
+            
+            
             socket.close();
         } catch (Exception e) {
             
