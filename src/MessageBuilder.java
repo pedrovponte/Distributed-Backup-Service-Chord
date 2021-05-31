@@ -121,10 +121,9 @@ public class MessageBuilder {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             outputStream.write(headerBytes);
             outputStream.write(body);
-            byte[] message = outputStream.toByteArray();
             //System.out.println("SENT: " + header);
 
-            return message;
+            return outputStream.toByteArray();
         } catch(Exception e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
@@ -152,5 +151,23 @@ public class MessageBuilder {
         String message = "1.0 DELETE " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + "\r\n\r\n";
         System.out.println("SENT: " + message);
         return message.getBytes();
+    }
+
+    public byte[] constructGetChunkMessage(String address, int port, String fileId, int chunkNo) {
+        String header = "1.0 GETCHUNK " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + " \r\n\r\n";
+
+        try {
+            byte[] headerBytes = header.getBytes(StandardCharsets.US_ASCII);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(headerBytes);
+            //System.out.println("SENT: " + header);
+
+            return outputStream.toByteArray();
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

@@ -1,7 +1,7 @@
 #src/*/*.java src/*/*/*.java
 REP_DEG = 1
 NEW_SIZE = 0
-FILEPATH = "../../pinguim.png"
+FILEPATH = "../../file1.pdf"
 ACCESS_POINT = "Peer1"
 
 

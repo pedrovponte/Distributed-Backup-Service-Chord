@@ -311,6 +311,50 @@ public class Peer implements RemoteInterface {
     @Override
     public void restore(String path) {
         //<Version> GETCHUNK <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+        if(!new File(path).exists()) {
+            System.out.println("The file - " + path + " - doesn't exist.");
+            return;
+        }
+
+        ArrayList<FileManager> files = getStorage().getFilesStored();
+        ArrayList<String> filesNames = new ArrayList<String>();
+
+        for(FileManager fileManager : files) {
+            filesNames.add(fileManager.getPath());
+        }
+
+        if(!filesNames.contains(path)){
+            System.out.println("File " + path + " never backed up in this peer");
+            return;
+        }
+
+        String fileID = null;
+        FileManager file = null;
+        for(FileManager fileManager : files) {
+            if(fileManager.getPath().equals(path)) {
+                file = fileManager;
+                fileID = fileManager.getFileID();
+                break;
+            }
+        }
+
+        ArrayList<Chunk> chunks = file.getFileChunks();
+        for(int i = 0; i < chunks.size(); i++) {
+            try {
+                Chunk chunk = chunks.get(i);
+                MessageBuilder messageBuilder = new MessageBuilder();
+                byte[] message = messageBuilder.constructGetChunkMessage(peer.getAddress().getHostAddress(), peer.getTcpPort(), fileID, chunk.getChunkNo());
+
+//                if(!(storage.hasRegisterStore(fileManager.getFileID(), chunk.getChunkNo()))) {
+//                    storage.createRegisterToStore(fileManager.getFileID(), chunk.getChunkNo());
+//                }
+            }
+            catch(Exception e) {
+                System.err.println("Caught exception while restoring");
+                e.printStackTrace();
+            }
+        }
+        //<Version> GETCHUNK <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
         /*File backupFile = new File(path);
 
         if(!backupFile.exists()) {
