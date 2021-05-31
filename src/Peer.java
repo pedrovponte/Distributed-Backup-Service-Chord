@@ -311,6 +311,47 @@ public class Peer implements RemoteInterface {
     @Override
     public void restore(String path) {
         //<Version> GETCHUNK <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
+        File backupFile = new File(path);
+        
+        if(!backupFile.exists()) {
+            System.out.println("The file - " + path + " - doesn't exist.");
+            return;
+        }
+        
+        ArrayList<FileManager> files = this.getStorage().getFilesStored();
+        ArrayList<String> filesNames = new ArrayList<String>();
+
+        for(int i = 0; i < files.size(); i++) {
+            filesNames.add(files.get(i).getPath());
+        }
+
+        if(!filesNames.contains(path)){
+            System.out.println("File " + path + " never backed up in this peer");
+            return;
+        }
+
+        FileManager file = null;
+
+        for(int i = 0; i < files.size(); i++) {
+            if(files.get(i).getPath().equals(path)) {
+                file = files.get(i);
+                break;
+            }
+        }
+
+        ArrayList<Chunk> chunks = file.getFileChunks();
+
+        for(int i = 0; i < chunks.size(); i++) {
+            
+        }
+
+        
+        
+        
+        
+        
+        
+        
         /*File backupFile = new File(path);
 
         if(!backupFile.exists()) {

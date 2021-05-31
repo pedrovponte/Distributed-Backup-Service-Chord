@@ -64,7 +64,9 @@ public class PutChunkMessageThread implements Runnable {
 
             NodeInfo receiver = Peer.getChordNode().getFingerTable().get(0);
 
-            Peer.getThreadExec().execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
+            result = r.nextInt(high-low) + low;
+
+            Peer.getThreadExec().schedule((new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message)), result, TimeUnit.MILLISECONDS);
             
             return;
         }
