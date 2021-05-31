@@ -63,7 +63,7 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "GETCHUNK":
-                Peer.getThreadExec().execute(new GetChunkMessageThread(this.message, Peer.getThreadExec(), Peer.getPeer().getAddress().getHostAddress(), Peer.getPeer().getTcpPort()));
+                Peer.getThreadExec().execute(new GetChunkMessageThread(this.message));
                 break;
 
             case "CHUNK":

@@ -10,13 +10,8 @@ public class GetChunkMessageThread implements Runnable {
     private String fileId;
     private int chunkNo;
     private String protocolVersion;
-    private final ScheduledThreadPoolExecutor threadExec;
 
-    private String senderAddress;
-    private int senderPort;
-
-
-    public GetChunkMessageThread(Message message, ScheduledThreadPoolExecutor threadExec, String senderAddress, int senderPort) {
+    public GetChunkMessageThread(Message message) {
         this.message = message;
         String[] header = this.message.getHeader();
         this.senderId = Integer.parseInt(header[2]);
@@ -25,9 +20,6 @@ public class GetChunkMessageThread implements Runnable {
         this.fileId = header[5];
         this.chunkNo = Integer.parseInt(header[6]);
         this.protocolVersion = header[0];
-        this.threadExec = threadExec;
-        this.senderPort = senderPort;
-        this.senderAddress = senderAddress;
     }
 
     @Override
@@ -41,7 +33,12 @@ public class GetChunkMessageThread implements Runnable {
         MessageBuilder messageBuilder = new MessageBuilder();
 
         //TODO contar os chunks recebidos
-        byte[] message = messageBuilder.constructChunkMessage(this.address,this.port, this.fileId, this.chunkNo, chunk.getChunkMessage());
-        threadExec.execute(new ThreadSendMessages(senderAddress, senderPort, message));
+        byte[] message = messageBuilder.constructChunkMessage(
+            Peer.getChordNode().getNodeInfo().getSocketAddress().getAddress().getHostAddress(),
+            Peer.getChordNode().getNodeInfo().getPort(), this.fileId, this.chunkNo,
+            chunk.getChunkMessage()
+        );
+
+        Peer.getThreadExec().execute(new ThreadSendMessages(this.address, this.port, message));
     }
 }
