@@ -64,9 +64,7 @@ public class PutChunkMessageThread implements Runnable {
 
             NodeInfo receiver = Peer.getChordNode().getFingerTable().get(0);
 
-            result = r.nextInt(high-low) + low;
-
-            Peer.getThreadExec().schedule((new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message)), result, TimeUnit.MILLISECONDS);
+            Peer.getThreadExec().execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
             
             return;
         }
@@ -75,6 +73,14 @@ public class PutChunkMessageThread implements Runnable {
         if(!(Peer.getStorage().checkIfHasSpace(this.body.length))) {
             System.out.println("Doesn't have space to store chunk " + this.chunkNo);
             System.out.println();
+
+            MessageBuilder messageBuilder = new MessageBuilder();
+            byte[] message = messageBuilder.constructPutChunkMessage(this.address, this.port, this.fileId, this.chunkNo, this.replication_degree, this.body);
+
+            NodeInfo receiver = Peer.getChordNode().getFingerTable().get(0);
+
+            Peer.getThreadExec().execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
+
             return;
         }
 

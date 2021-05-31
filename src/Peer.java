@@ -297,7 +297,7 @@ public class Peer implements RemoteInterface {
                     
                     // send threads
                     threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
-                    threadExec.schedule(new ThreadCountStored(replication, fileManager.getFileID(), i, message, receiver), 1, TimeUnit.SECONDS);
+                    threadExec.schedule(new ThreadCountStored(replication, fileManager.getFileID(), i, message, receiver), 2, TimeUnit.SECONDS);
                 }                
             }
             catch (Exception e) {
