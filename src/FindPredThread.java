@@ -10,7 +10,7 @@ public class FindPredThread implements Runnable {
 
 	@Override
 	public void run() {
-		System.out.println("INSIDE FindPredThread");
+		//System.out.println("INSIDE FindPredThread");
         // Version FINDSUCC + nodeId + address + port
         String[] header = this.message.getHeader();
         

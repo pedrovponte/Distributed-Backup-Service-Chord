@@ -279,10 +279,10 @@ public class ChordNode {
             set succ := v
         send a notify(n) to succ*/
         
-        System.out.println("STABILIZE");
+        //System.out.println("STABILIZE");
 
-        System.out.println("SUCC: " + this.successor);
-        System.out.println("PRED: " + this.predecessor);
+        //System.out.println("SUCC: " + this.successor);
+        //System.out.println("PRED: " + this.predecessor);
 
         if(this.nodeInfo.getNodeId().equals(this.fingerTable.get(0).getNodeId()) && this.nodeInfo.getIp().equals(this.fingerTable.get(0).getIp()) && this.nodeInfo.getPort() == this.fingerTable.get(0).getPort()) {
             //System.out.println("EQUALSSS");
@@ -371,7 +371,7 @@ public class ChordNode {
 
             //System.out.println("NOTIFY PRED: " + (this.predecessor == null));
             if(this.predecessor == null) {
-                System.out.println("INSIDE IF NOTIFY PRED: " + this.predecessor);
+                //System.out.println("INSIDE IF NOTIFY PRED: " + this.predecessor);
                 this.predecessor = node;
                 //System.out.println("PREDECESSOR3: " + this.predecessor);
 
@@ -406,7 +406,7 @@ public class ChordNode {
             finger[next] := findSuccessor(n Å 2^(next - 1))
         }*/
 
-        System.out.println("FIX FINGERS");
+        //System.out.println("FIX FINGERS");
 
         this.next += 1;
 

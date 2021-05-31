@@ -8,7 +8,7 @@ public class ManageReceivedMessages implements Runnable {
     
     // checks the message type and then creates a new thread to treat that message
     public void run() {
-        System.out.println("INSIDE MESSAGE MANAGER");
+        //System.out.println("INSIDE MESSAGE MANAGER");
         // message: <Version> <MessageType> <SenderId> <FileId> <ChunkNo> <ReplicationDeg> <CRLF>
         String[] header = this.message.getHeader();
         //System.out.println("MESSAGE: " + header[0] + " " + header[1] + " " + header[2] + " " + header[3] + " " + header[4]);
@@ -55,7 +55,7 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "GETCHUNK":
-                Peer.getThreadExec().execute(new RemovedMessageThread(this.message));
+
                 break;
 
             case "CHUNK":
@@ -63,7 +63,7 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "REMOVED":
-
+                Peer.getThreadExec().execute(new RemovedMessageThread(this.message));
                 break;
 
             case "DELETED":

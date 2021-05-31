@@ -11,7 +11,7 @@ public class NotifyThread implements Runnable {
 
     @Override
 	public void run() {
-        System.out.println("INSIDE NotifyThread");
+        //System.out.println("INSIDE NotifyThread");
         // Version + NOTIFY + nodeId + address + port 
         String[] header = this.message.getHeader();
         

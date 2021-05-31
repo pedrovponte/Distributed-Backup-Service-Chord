@@ -9,7 +9,7 @@ public class AliveThread implements Runnable {
 
     @Override
 	public void run() {
-		System.out.println("INSIDE AliveThread");
+		//System.out.println("INSIDE AliveThread");
         // Version FINDSUCC + nodeId + address + port
         String[] header = this.message.getHeader();
         

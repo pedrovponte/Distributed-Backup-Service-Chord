@@ -10,7 +10,7 @@ public class PredAliveThread implements Runnable{
 
     @Override
 	public void run() {
-        System.out.println("INSIDE PredAliveThread");
+        //System.out.println("INSIDE PredAliveThread");
         // Version PREDFOUND + nodeId + address + port
         String[] header = this.message.getHeader();
         
@@ -22,7 +22,6 @@ public class PredAliveThread implements Runnable{
 
         MessageBuilder messageBuilder = new MessageBuilder();
         byte[] response = messageBuilder.constructAliveMessage(Peer.getChordNode().getNodeInfo());
-        System.out.println("SENT: " + response.toString());
         Peer.getThreadExec().execute(new ThreadSendMessages(address, port, response));
 	}
 }
