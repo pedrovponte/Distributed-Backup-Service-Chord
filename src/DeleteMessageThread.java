@@ -1,5 +1,6 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DeleteMessageThread implements Runnable {
     private Message message;
@@ -24,14 +25,18 @@ public class DeleteMessageThread implements Runnable {
     @Override
     public void run() {
         System.out.println("RECEIVED: " + this.protocolVersion + " DELETE " + this.senderId + " " + this.address + " " + this.port + " " + this.fileId + " " + this.chunkNo);
-        String path = "peer_" + Peer.getPeerId() + "/backup/"+this.fileId+"_"+this.chunkNo;
-        System.out.println("PATH: "+path);
+        String path = "peer_" + Peer.getPeerId() + "/backup/"+ this.fileId + "_" + this.chunkNo;
+        //System.out.println("PATH: "+ path);
 
-        if(new File(path).exists()) {
-            FileManager fileManager = new FileManager(path, Peer.getPeerId());
-            Peer.getStorage().deleteFile(fileManager);
-            File f = new File(path);
-            f.delete();
+        ConcurrentHashMap<String, Chunk> chunks = Peer.getStorage().getChunksStored();
+
+        for(String key : chunks.keySet()) {
+            Chunk chunk = chunks.get(key);
+            if(chunk.getFileId().equals(this.fileId)) {
+                Peer.getStorage().deleteChunk(key);
+                File filename = new File(path);
+                filename.delete();
+            }
         }
     }
 }

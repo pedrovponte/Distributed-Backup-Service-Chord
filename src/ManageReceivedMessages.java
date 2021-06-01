@@ -75,10 +75,6 @@ public class ManageReceivedMessages implements Runnable {
                 Peer.getThreadExec().execute(new RemovedMessageThread(this.message));
                 break;
 
-            case "DELETED":
-                System.out.println("Received DELETED"); //TODO
-                break;
-
             default:
                 System.out.println("Received Unknown Message Type");
                 break;
