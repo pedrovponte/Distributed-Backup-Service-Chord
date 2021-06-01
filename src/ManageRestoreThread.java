@@ -5,11 +5,9 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 
 public class ManageRestoreThread implements Runnable {
-    private Peer peer;
     private FileManager fileManager;
 
-    public ManageRestoreThread(Peer peer, FileManager fileManager) {
-        this.peer = peer;
+    public ManageRestoreThread(FileManager fileManager) {
         this.fileManager = fileManager;
     }
 
@@ -22,7 +20,7 @@ public class ManageRestoreThread implements Runnable {
         int n=0;
         // checks if all file chunks are restored
         while(true) {
-            ConcurrentHashMap<String,byte[]> allChunks = this.peer.getStorage().getChunksRestored();
+            ConcurrentHashMap<String,byte[]> allChunks = Peer.getStorage().getChunksRestored();
             fileChunks = new ConcurrentHashMap<String, byte[]>();
 
             for(String key : allChunks.keySet()) {
@@ -38,8 +36,8 @@ public class ManageRestoreThread implements Runnable {
                 //threadExec.execute(new ThreadSendMessages(set.getValue().get(j).getAddress().getHostAddress(), set.getValue().get(j).getPort(), message));
 
                 if(n >= 10) {
-                    this.peer.getStorage().deleteFileRestored(this.fileManager.getFileID());
-                    this.peer.getStorage().deleteChunksRestored(this.fileManager.getFileID());
+                    Peer.getStorage().deleteFileRestored(this.fileManager.getFileID());
+                    Peer.getStorage().deleteChunksRestored(this.fileManager.getFileID());
                     System.out.println("Could not restore all chunks. Exiting...");
 
                     break;
@@ -59,9 +57,9 @@ public class ManageRestoreThread implements Runnable {
 
 
         // create the chunk file in the peer directory
-        String dir = "peer_" + this.peer.getPeerId();
-        String restoreDir = "peer_" + this.peer.getPeerId() + "/" + "restore";
-        String file = "peer_" + this.peer.getPeerId() + "/" + "restore" + "/" + this.fileManager.getFile().getName();
+        String dir = "peer_" + Peer.getPeerId();
+        String restoreDir = "peer_" + Peer.getPeerId() + "/" + "restore";
+        String file = "peer_" + Peer.getPeerId() + "/" + "restore" + "/" + this.fileManager.getFile().getName();
         File directory = new File(dir);
         File restoreDirectory = new File(restoreDir);
         File f = new File(file);

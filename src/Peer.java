@@ -353,7 +353,7 @@ public class Peer implements RemoteInterface {
             }
         }
 
-        threadExec.execute(new ManageRestoreThread(this, file));
+        threadExec.execute(new ManageRestoreThread(file));
     }
 
     @Override
