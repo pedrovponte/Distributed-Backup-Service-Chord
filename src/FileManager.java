@@ -31,6 +31,17 @@ public class FileManager implements java.io.Serializable {
         splitFile();
     }
 
+    public FileManager(String path, int peerId) {
+        this.path = path;
+        this.fileChunks = new ArrayList<>();
+        this.peerId = peerId;
+
+        this.file = new File(path);
+        String tempFileID = createFileID();
+        this.fileID = createHash256(tempFileID);
+        splitFile();
+    }
+
 
     public ArrayList<Chunk> getFileChunks() {
         return this.fileChunks;

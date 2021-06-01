@@ -12,5 +12,5 @@ fi
 peer_ap=$1
 new_size=$2
 
-cd build/
-java Application "${peer_ap}" RECLAIM "${new_size}"
+cd src/build/
+java Client "${peer_ap}" RECLAIM "${new_size}"

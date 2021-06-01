@@ -12,5 +12,5 @@ peer_ap=$1
 filepath=$2
 replication_degree=$3
 
-cd build/
+cd src/build/
 java Client "${peer_ap}" BACKUP "${filepath}" "${replication_degree}"

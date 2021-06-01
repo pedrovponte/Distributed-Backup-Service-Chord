@@ -4,12 +4,12 @@ argc=$#
 
 if ((argc < 2))
 then
-  echo "Usage: $0 <peer_ap> <test_file>"
+  echo "Usage: $0 <peer_ap> <filepath>"
   exit 1
 fi
 
 peer_ap=$1
-test_file=$2
+filepath=$2
 
-cd build/
-java Application "${peer_ap}" DELETE "${test_file}"
+cd src/build/
+java Client "${peer_ap}" DELETE "${filepath}"
