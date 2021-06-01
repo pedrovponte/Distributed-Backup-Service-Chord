@@ -352,6 +352,8 @@ public class Peer implements RemoteInterface {
                 e.printStackTrace();
             }
         }
+
+        threadExec.execute(new ManageRestoreThread(this, file));
     }
 
     @Override

@@ -51,7 +51,7 @@ public class ThreadCountStored implements Runnable {
         }
         else if(storedReplications >= this.replication) {
             System.out.println("Replication completed: " + storedReplications);
-            System.out.println();
+            //System.out.println();
             return;
         }
 	}

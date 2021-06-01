@@ -67,7 +67,7 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "CHUNK":
-                System.out.println("RECEIVED CHUNK TADA");
+                Peer.getThreadExec().execute(new ChunkMessageThread(this.message));
                 break;
 
             case "REMOVED":
@@ -75,11 +75,11 @@ public class ManageReceivedMessages implements Runnable {
                 break;
 
             case "DELETED":
-
+                System.out.println("Received DELETED"); //TODO
                 break;
 
             default:
-
+                System.out.println("Received Unknown Message Type");
                 break;
         }
 

@@ -2,6 +2,7 @@
 REP_DEG = 1
 NEW_SIZE = 0
 FILEPATH = "../../file.pdf"
+#FILEPATH = "../../thanos.gif"
 ACCESS_POINT = "Peer1"
 
 
