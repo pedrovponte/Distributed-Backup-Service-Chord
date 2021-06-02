@@ -69,7 +69,6 @@ public class ChannelController implements Runnable {
                 e.printStackTrace();
             }
             
-            
             socket.close();
         } catch (Exception e) {
             

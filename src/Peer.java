@@ -25,7 +25,7 @@ public class Peer implements RemoteInterface {
     private static FileStorage storage;
     private ConcurrentHashMap<String, Integer> receivedChunkMessages;
     private ServerSocket serverSocket;
-    private InetAddress address;
+    private String address;
     private static ChordNode chordNode;
     private int tcpPort;
     private static Peer peer;
@@ -37,18 +37,10 @@ public class Peer implements RemoteInterface {
         System.out.println("ID: " + peerId);
         threadExec = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(10000);
         System.out.println("--- Created Threads ---");
-        this.tcpPort = Integer.parseInt(args[3]);
+        this.tcpPort = Integer.parseInt(args[4]);
+        this.address = args[3];
 
-        try {
-            this.address = InetAddress.getLocalHost();
-            System.out.println("ADDRESS: " + this.address + "; PORT: " + this.tcpPort);
-        }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
-
-        createChannels(this.address.getHostAddress(), this.tcpPort);
+        createChannels(this.address, this.tcpPort);
         System.out.println("--- TCP Channel Created ---");
 
         execChannels();
@@ -87,7 +79,7 @@ public class Peer implements RemoteInterface {
         System.out.println("Total: " + chunks.size());
 
 
-        chordNode = new ChordNode(this.address.getHostAddress(), this.tcpPort);
+        chordNode = new ChordNode(this.address, this.tcpPort);
 
 
         try {
@@ -97,11 +89,11 @@ public class Peer implements RemoteInterface {
             e.printStackTrace();
         }
 
-        if(args.length == 4) {
+        if(args.length == 5) {
             chordNode.create();
         }
-        else if(args.length == 6) {
-            chordNode.join(args[4], Integer.parseInt(args[5]));
+        else if(args.length == 7) {
+            chordNode.join(args[5], Integer.parseInt(args[6]));
         }
 
         // chamar as atualizaçoes aqui ou no create?
@@ -110,9 +102,9 @@ public class Peer implements RemoteInterface {
     public static void main(String[] args) {
 
         // add two arguments (ip address and port to connect to chord ring in case it exists. Otherwise, create a new one)
-        if (args.length != 4 && args.length != 6) {
-            System.out.println(
-                    "Usage: java Peer <protocol_version> <peer_id> <service_access_point> <TCP_port> <ip_address_of_other> <port_of_other>");
+        if (args.length != 5 && args.length != 7) {
+            System.out.println("Usage: java Peer <protocol_version> <peer_id> <service_access_point> <ip_address> <TCP_port>");
+            System.out.println("Usage: java Peer <protocol_version> <peer_id> <service_access_point> <ip_address> <TCP_port> <ip_address_of_other> <TCP_port_of_other>");
             return;
         }
 
@@ -125,11 +117,13 @@ public class Peer implements RemoteInterface {
 
         int peerId = Integer.parseInt(args[1]);
         String serviceAccessPoint = args[2];
-        int tcpPort = Integer.parseInt(args[3]);
+        String ipAddress = args[3];
+        int tcpPort = Integer.parseInt(args[4]);
 
         System.out.println("Protocol version: " + protocolVersion);
         System.out.println("Peer Id: " + peerId);
         System.out.println("Service Access Point: " + serviceAccessPoint);
+        System.out.println("IP ADRESS: " + ipAddress);
         System.out.println("TCP Port: " + tcpPort);
 
         peer = new Peer(args);
@@ -214,7 +208,13 @@ public class Peer implements RemoteInterface {
 
 
     public InetAddress getAddress() {
-        return this.address;
+        try {
+			return InetAddress.getByName(this.address);
+		} catch (UnknownHostException e) {
+            System.err.println(e.getMessage());
+			e.printStackTrace();
+        }
+        return null;
     }
 
     public int getTcpPort() {

@@ -135,16 +135,14 @@ public class ChordNode {
 
     // first node to enter in the ring needs to create that
     public void create() {
-        //System.out.println("INSIDE CREATE CHORD");
         this.fingerTable.set(0, this.nodeInfo);
         // call threads that will search/ actualize successors, fingers, predecessor, etc...
-        mantainer();
+        maintainer();
     }
 
 
     public void join(String address, int port) {
         // send message to find successor
-        //System.out.println("INSIDE JOIN");
         MessageBuilder messageBuilder = new MessageBuilder();
         byte[] message = messageBuilder.constructFindSuccessorMessage(this.nodeInfo, false, -1);
         Peer.getThreadExec().execute(new ThreadSendMessages(address, port, message));
@@ -156,14 +154,9 @@ public class ChordNode {
             e.printStackTrace();
         }
 
-        //System.out.println("JOINED");
-
-        //System.out.println("SUCCESSOR: " + this.successor);
-
         this.predecessor = this.successor;
         
-        // necessario algum update da finger_table?
-        mantainer();
+        maintainer();
     }
 
 
@@ -279,10 +272,10 @@ public class ChordNode {
     }
 
 
-    public void mantainer() {
-        Peer.getThreadExec().scheduleAtFixedRate(new ChordMantainer(this, "stabilize"), 3, 3, TimeUnit.SECONDS);
-        Peer.getThreadExec().scheduleAtFixedRate(new ChordMantainer(this, "fix_fingers"), 3, 5, TimeUnit.SECONDS);
-        Peer.getThreadExec().scheduleAtFixedRate(new ChordMantainer(this, "check_predecessor"), 3, 4, TimeUnit.SECONDS);
+    public void maintainer() {
+        Peer.getThreadExec().scheduleAtFixedRate(new ChordMaintainer(this, "stabilize"), 3, 3, TimeUnit.SECONDS);
+        Peer.getThreadExec().scheduleAtFixedRate(new ChordMaintainer(this, "fix_fingers"), 3, 5, TimeUnit.SECONDS);
+        Peer.getThreadExec().scheduleAtFixedRate(new ChordMaintainer(this, "check_predecessor"), 3, 4, TimeUnit.SECONDS);
     }
 
 
