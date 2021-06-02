@@ -33,7 +33,6 @@ public class PutChunkMessageThread implements Runnable {
 
 	@Override
 	public void run() {
-        // casos em que é sucessor dele próprio como devem ser tratados? Nao faz backup?
         if(this.address.equals(Peer.getChordNode().getNodeInfo().getIp()) && this.port == Peer.getChordNode().getNodeInfo().getPort()) {
             System.out.println("Same peer as initiator. Can't backup chunk.");
             return;

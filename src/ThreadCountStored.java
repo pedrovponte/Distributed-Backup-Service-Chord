@@ -23,14 +23,10 @@ public class ThreadCountStored implements Runnable {
 	@Override
 	public void run() {
         ConcurrentHashMap<String, ArrayList<InetSocketAddress>> distribution = Peer.getStorage().getBackupChunksDistribution();
-        //System.out.println("DIST: " + distribution);
         String chunkId = this.fileId + "_" + this.chunkNo;
         int storedReplications = 0;
-        //System.out.println("CHUNKID: " + chunkId);
-        //System.out.println("CONTAINS: " + distribution.containsKey(chunkId));
         if(distribution.containsKey(chunkId)) {
             storedReplications = distribution.get(chunkId).size();
-            //System.out.println("REPLICATIONSSS: " + storedReplications);
         }
 
         if(storedReplications < this.replication && this.tries < 4) {
@@ -39,17 +35,12 @@ public class ThreadCountStored implements Runnable {
             String[] messageArr = (new String(this.message).toString()).split(" ");
             System.out.println("SENT: "+ messageArr[0] + " " + messageArr[1] + " " + messageArr[2] + " " + messageArr[3] + " " + messageArr[4] + " " + messageArr[5] + " " + messageArr[6] + " " + messageArr[7]);
             this.time = this.time * 2;
-            // System.out.println("TIME: " + this.time);
             this.tries++;
             Peer.getThreadExec().schedule(this, this.time, TimeUnit.SECONDS);
-            // System.out.println("After create thread");
         }
 
         if(this.tries >= 4) {
             System.out.println("Minimum replication not achieved");
-            if(storedReplications == 0) {
-                Peer.getStorage().deleteFile(this.fileId);
-            }
             return;
         }
         else if(storedReplications >= this.replication) {

@@ -235,8 +235,6 @@ public class Peer implements RemoteInterface {
 
                 for(int j = 0; j < replication; j++) {
                     NodeInfo receiver = chordNode.getFingerTable().get(j);
-                    /*if(j < chordNode.getFingerTableLength()) receiver = ;
-                    else receiver = chordNode.getSuccessor();*/
                     
                     // send threads
                     threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
