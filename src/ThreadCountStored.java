@@ -47,6 +47,9 @@ public class ThreadCountStored implements Runnable {
 
         if(this.tries >= 4) {
             System.out.println("Minimum replication not achieved");
+            if(storedReplications == 0) {
+                Peer.getStorage().deleteFile(this.fileId);
+            }
             return;
         }
         else if(storedReplications >= this.replication) {

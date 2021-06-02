@@ -171,9 +171,6 @@ public class ChordNode {
                 return m.findSuccessor(id)
             }
         }*/
-        
-        //System.out.println("INSIDE FIND SUCCESSOR");
-        //System.out.println("NODEID: " + nodeId);
 
         if(!isFinger) {    
             return findSuccessorNode(nodeId, ipAddress, port);
@@ -186,26 +183,19 @@ public class ChordNode {
 
     public NodeInfo findSuccessorNode(BigInteger nodeId, String ipAddress, int port) {
         if(this.nodeInfo.getNodeId().equals(this.fingerTable.get(0).getNodeId())) { // existe apenas um nó, por isso o sucessor é igual ao próprio nó
-            //System.out.println("HEREEEEEEEEEEEEE");
-            //System.out.println("INSIDE FIRST IF");
             if(!nodeId.equals(this.nodeInfo.getNodeId())) { // o nó que procura o sucessor não é o mesmo que o que recebe a mensagem 
                 this.predecessor = new NodeInfo(nodeId, new InetSocketAddress(ipAddress, port));
-                //System.out.println("PREDECESSOR1: " + this.predecessor);
                 this.successor = new NodeInfo(nodeId, new InetSocketAddress(ipAddress, port));
-                //System.out.println("SUCCESSOR1: " + this.successor);
                 this.fingerTable.set(0, this.successor);
             }
             return this.nodeInfo; // o sucessor do nó que o procura é este, assim como o sucessor deste nó é o nó que estava a procura de sucessor
         }
 
         if(compareNodeIds(this.nodeInfo.getNodeId(), nodeId, this.fingerTable.get(0).getNodeId())) { // se estiver compreendido entre este nó e sucessor
-            //System.out.println("INSIDE SECOND IF");
             return this.fingerTable.get(0);
         }
 
         else {
-            //System.out.println("ELSE FIND SUCCESORRRRRRRRR");
-            //System.out.println("INSIDE ELSE");
             NodeInfo n = closestPrecedingNode(nodeId);
 
             if(this.nodeInfo.getNodeId().equals(n.getNodeId())) {
@@ -292,14 +282,11 @@ public class ChordNode {
         //System.out.println("PRED: " + this.predecessor);
 
         if(this.nodeInfo.getNodeId().equals(this.fingerTable.get(0).getNodeId()) && this.nodeInfo.getIp().equals(this.fingerTable.get(0).getIp()) && this.nodeInfo.getPort() == this.fingerTable.get(0).getPort()) {
-            //System.out.println("EQUALSSS");
             this.succPred = this.predecessor;
         }
         else {
-            //System.out.println("ELSE STABILIZE");
             MessageBuilder messageBuilder = new MessageBuilder();
             byte[] message = messageBuilder.constructFindPredecessorMessage(this.nodeInfo);
-            //System.out.println("FINGER TABLE 0: " + this.fingerTable.get(0));
             Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getIp(), this.fingerTable.get(0).getPort(), message));
             
             try {
@@ -312,16 +299,13 @@ public class ChordNode {
             this.stabilizeCountDownLatch = new CountDownLatch(1);
         }
 
-        //System.out.println("BEFORE IF SUCCPRED");
         if(this.succPred != null) {
             if(compareNodeIds(this.nodeInfo.getNodeId(), this.succPred.getNodeId(), this.fingerTable.get(0).getNodeId()) || this.nodeInfo.getNodeId().equals(this.fingerTable.get(0).getNodeId())) {
                 this.successor = this.succPred;
                 this.fingerTable.set(0, this.succPred);
-                //System.out.println("SUCCESSOR2: " + this.successor);
             }
         }
 
-        //System.out.println("BEFORE NOTIFY");
         MessageBuilder messageB = new MessageBuilder();
         byte[] m = messageB.constructNotifyMessage(this.nodeInfo);
         Peer.getThreadExec().execute(new ThreadSendMessages(this.fingerTable.get(0).getIp(), this.fingerTable.get(0).getPort(), m));
@@ -329,7 +313,6 @@ public class ChordNode {
 
 
     public void recoverStabilize() {
-        //System.out.println("RECOVERINGGGG");
         int newSuccessorIndex = -1;
         NodeInfo actualSuccessor = this.successor;
 
@@ -346,7 +329,6 @@ public class ChordNode {
             this.successor = this.fingerTable.get(newSuccessorIndex);
         }
         else {
-            //this.successor = this.nodeInfo;
             if(actualSuccessor.getNodeId().equals(this.predecessor.getNodeId())) {
                 this.successor = this.nodeInfo;
             }
@@ -370,15 +352,13 @@ public class ChordNode {
         // When receiving notify(p) at n:
         /*if (pred = nil or p in (pred, n]) then
             set pred := p*/
+
         if(this.predecessor == null || compareNodeIds(this.predecessor.getNodeId(), node.getNodeId(), this.nodeInfo.getNodeId()) || !this.predecessor.getNodeId().equals(this.nodeInfo.getNodeId())) {
-            //System.out.println("LELELELE: " + node.getNodeId());
             if(node.getNodeId().equals(this.nodeInfo.getNodeId())) {
                 return;
             }
 
-            //System.out.println("NOTIFY PRED: " + (this.predecessor == null));
             if(this.predecessor == null) {
-                //System.out.println("INSIDE IF NOTIFY PRED: " + this.predecessor);
                 this.predecessor = node;
                 //System.out.println("PREDECESSOR3: " + this.predecessor);
 
@@ -411,8 +391,6 @@ public class ChordNode {
             finger[next] := findSuccessor(n Å 2^(next - 1))
         }*/
 
-        //System.out.println("FIX FINGERS");
-
         this.next += 1;
 
         if(this.next > M) {
@@ -424,17 +402,11 @@ public class ChordNode {
         BigInteger module = BigDecimal.valueOf(Math.pow(2, M)).toBigInteger();
         BigInteger finger = s.mod(module);
 
-        //System.out.println("FINGERRRRRRRRRR: " + finger);
-
         NodeInfo node = findSuccessor(this.nodeInfo.getIp(), this.nodeInfo.getPort(), finger, true, this.next);
 
         if(node != null) {
             this.fingerTable.set(this.next, node);
         }
-        
-        /*for(int i = 0; i < M; i++) {
-            System.out.println("FINGER " + i + ": " + this.fingerTable.get(i));
-        }*/
     }
 
 
@@ -444,13 +416,9 @@ public class ChordNode {
                 predecessor := nil
         }*/
 
-        //System.out.println("CHECK PREDECESSOR");
-
         if(this.predecessor != null && !checkPredecessorAlive()) {
             this.predecessor = null;
-            //System.out.println("PREDECESSOR DEAD");
         }
-
     }
 
     public boolean checkPredecessorAlive() {
@@ -460,17 +428,14 @@ public class ChordNode {
         byte[] message = messageBuilder.constructPredAliveMessage(this.nodeInfo);
         Peer.getThreadExec().execute(new ThreadSendMessages(this.predecessor.getIp(), this.predecessor.getPort(), message));
 
-        //System.out.println("BEFORE THREAD SLEEP");
         try {
             Thread.sleep(500);
         } catch (Exception e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
-        //System.out.println("AFTER THREAD SLEEP");
 
         if(this.answerAlive != null) {
-            //System.out.println("PRED ALIVE");
             alive = true;
         }
 

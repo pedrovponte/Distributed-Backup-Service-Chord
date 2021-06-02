@@ -16,23 +16,16 @@ import java.util.concurrent.*;
 
 public class Peer implements RemoteInterface {
     private ChannelController TCPChannel;
-    //private broadcast.ChannelController MDB;
-    //private broadcast.ChannelController MDR;
-    //private TCPChannel tcpChannel;
-    //private int TCPport;
     private String protocolVersion;
     private static int peerId;
     private static ScheduledThreadPoolExecutor threadExec;
     private static FileStorage storage;
-    private ConcurrentHashMap<String, Integer> receivedChunkMessages;
-    private ServerSocket serverSocket;
     private String address;
     private static ChordNode chordNode;
     private int tcpPort;
     private static Peer peer;
 
     public Peer(String[] args) {
-        //this.receivedChunkMessages = new ConcurrentHashMap<String, Integer>();
         this.protocolVersion = args[0];
         peerId = Integer.parseInt(args[1]);
         System.out.println("ID: " + peerId);
@@ -96,8 +89,6 @@ public class Peer implements RemoteInterface {
         else if(args.length == 7) {
             chordNode.join(args[5], Integer.parseInt(args[6]));
         }
-
-        // chamar as atualizaçoes aqui ou no create?
     }
 
     public static void main(String[] args) {
@@ -141,15 +132,6 @@ public class Peer implements RemoteInterface {
             ex.printStackTrace();
         }
 
-
-        // sends WORKING message in order to make all the other peers know that this peer is available and get the files deleted information in order to delete them and update chunksDistribution info
-        /*if(protocolVersion.equals("2.0")) {
-            // <Version> WORKING <PeerId> <CRLF><CRLF>
-            String toSend = protocolVersion + " WORKING " + peerId + " \r\n\r\n";
-            peer.getThreadExec().execute(new broadcast.ThreadSendMessages(peer.getMC(), toSend.getBytes()));
-            System.out.println("SENT: " + toSend);
-        }*/
-
         // serialize data before close peer
         Runtime.getRuntime().addShutdownHook(new Thread(Peer::serialization));
     }
@@ -158,21 +140,6 @@ public class Peer implements RemoteInterface {
     public ChannelController getTCPChannel() {
         return this.TCPChannel;
     }
-
-
-    /*public broadcast.ChannelController getMDB() {
-        return this.MDB;
-    }
-
-    
-    public broadcast.ChannelController getMDR() {
-        return this.MDR;
-    }*/
-
-    
-    /*public TCPChannel getTcpChannel() {
-        return this.tcpChannel;
-    }*/
 
     
     public String getProtocolVersion() {
@@ -198,10 +165,6 @@ public class Peer implements RemoteInterface {
         return storage;
     }
 
-    
-    public ConcurrentHashMap<String,Integer> getReceivedChunkMessages() {
-        return this.receivedChunkMessages;
-    }
 
     public static ChordNode getChordNode() {
         return chordNode;
@@ -218,21 +181,9 @@ public class Peer implements RemoteInterface {
         return null;
     }
 
+
     public int getTcpPort() {
         return this.tcpPort;
-    }
-
-
-
-    // increment the number of CHUNK messages received for a given chunkId, in order to know if some peer already has sent the chunk chunkId to the initiator peer
-    public void incrementReceivedChunkMessagesNumber(String chunkId) {
-        Integer number = this.receivedChunkMessages.get(chunkId);
-        if(number == null) {
-            this.receivedChunkMessages.put(chunkId, 1);
-        }
-        else {
-            this.receivedChunkMessages.replace(chunkId, number + 1);
-        }
     }
 
 
@@ -268,11 +219,6 @@ public class Peer implements RemoteInterface {
 
         storage.addFile(fileManager);
 
-        // relacionado com enhancement do delete proj1
-        /*if(storage.hasDeletedFile(fileManager.getFileID())) {
-            storage.removeDeletedFile(fileManager.getFileID());
-        }*/
-
         ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
 
         for(int i = 0; i < fileChunks.size(); i++) {
@@ -288,9 +234,9 @@ public class Peer implements RemoteInterface {
                 }
 
                 for(int j = 0; j < replication; j++) {
-                    NodeInfo receiver;
-                    if(j < chordNode.getFingerTableLength()) receiver = chordNode.getFingerTable().get(j);
-                    else receiver = chordNode.getSuccessor();
+                    NodeInfo receiver = chordNode.getFingerTable().get(j);
+                    /*if(j < chordNode.getFingerTableLength()) receiver = ;
+                    else receiver = chordNode.getSuccessor();*/
                     
                     // send threads
                     threadExec.execute(new ThreadSendMessages(receiver.getIp(), receiver.getPort(), message));
@@ -304,7 +250,7 @@ public class Peer implements RemoteInterface {
         }
     }
 
-    //TODO
+
     @Override
     public void restore(String path) {
         //<Version> GETCHUNK <SenderId> <FileId> <ChunkNo> <CRLF><CRLF>
@@ -357,6 +303,7 @@ public class Peer implements RemoteInterface {
         threadExec.execute(new ManageRestoreThread(file));
     }
 
+    
     @Override
     public void delete(String path) {
         // <Version> DELETE <SenderId> <FileId> <CRLF><CRLF>

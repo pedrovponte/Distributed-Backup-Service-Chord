@@ -60,7 +60,7 @@ public class ChannelController implements Runnable {
             out.flush();
             Message toSend = new Message(message);
             out.writeObject(toSend);
-            //System.out.println("SEND MESSAGE"); // sera necessario fazer Thread.sleep()?
+            //System.out.println("SEND MESSAGE");
             
             try {
                 Thread.sleep(1000);

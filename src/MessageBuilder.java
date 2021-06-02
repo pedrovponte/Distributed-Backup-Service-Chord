@@ -69,6 +69,8 @@ public class MessageBuilder {
         return message.getBytes();
     }
 
+
+    // Version + PREDALIVE + nodeId + address + port 
     public byte[] constructPredAliveMessage(NodeInfo nodeInfo) {
         //System.out.println("INSIDE PREDALIVE");
         String message = "1.0 PREDALIVE " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + " \r\n\r\n";
@@ -76,6 +78,7 @@ public class MessageBuilder {
         return message.getBytes();
     }
 
+    // Version + ALIVE + nodeId + address + port
     public byte[] constructAliveMessage(NodeInfo nodeInfo) {
         //System.err.println("INSIDE ALIVE");
         String message = "1.0 ALIVE " + nodeInfo.getNodeId() + " " + nodeInfo.getIp() + " " + nodeInfo.getPort() + " \r\n\r\n";
@@ -112,6 +115,7 @@ public class MessageBuilder {
         return null;
     }
 
+
     // <Version> PUTCHUNK <SenderId> <Address> <Port> <FileId> <ChunkNo> <ReplicationDeg> <CRLF><CRLF> <Body>
     public byte[] constructPutChunkMessage(String address, int port, String fileId, int chunkNo, int replication_degree, byte[] body) {
         String header = "1.0 PUTCHUNK " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + " " + replication_degree + " \r\n\r\n";
@@ -132,12 +136,14 @@ public class MessageBuilder {
         return null;
     }
 
+
     // Version STORED <SenderId> <Address> <Port> <FileId> <ChunkNo>
     public byte[] constructStoredMessage(String address, int port, String fileId, int chunkNo) {
         String message = "1.0 STORED " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + " \r\n\r\n";
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
+
 
     // Version REMOVED <SenderId> <Address> <Port> <FileId> <ChunkNo>
     public byte[] constructRemovedMessage(Peer peer, String fileId, int chunkNo) {
@@ -146,13 +152,16 @@ public class MessageBuilder {
         return message.getBytes();
     }
 
-    // <Version> DELETE <SenderId> <FileId> <CRLF><CRLF>
+
+    // Version DELETE <SenderId> <Address> <Port> <FileId> <CRLF><CRLF>
     public byte[] constructDeleteMessage(String address, int port, String fileId) {
         String message = "1.0 DELETE " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " \r\n\r\n";
         System.out.println("SENT: " + message);
         return message.getBytes();
     }
 
+
+    // Version GETCHUNK <SenderId> <Address> <Port> <FileId> <ChunkNo>
     public byte[] constructGetChunkMessage(String address, int port, String fileId, int chunkNo) {
         String header = "1.0 GETCHUNK " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + " \r\n\r\n";
 
@@ -171,6 +180,8 @@ public class MessageBuilder {
         return null;
     }
 
+
+    // Version CHUNK <SenderId> <Address> <Port> <FileId> <ChunkNo>
     public byte[] constructChunkMessage(String address, int port, String fileId, int chunkNo, byte[] body) {
         String header = "1.0 CHUNK " + Peer.getPeerId() + " " + address + " " + port + " " + fileId + " " + chunkNo + " \r\n\r\n";
 

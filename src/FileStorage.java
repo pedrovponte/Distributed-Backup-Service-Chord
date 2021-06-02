@@ -261,6 +261,15 @@ public class FileStorage implements java.io.Serializable {
         // System.out.println("--------------------------");
     }
 
+    public void deleteFile(String fileId) {
+        for(int i = 0; i < filesStored.size(); i++) {
+            if(filesStored.get(i).getFileID().equals(fileId)) {
+                this.filesStored.remove(i);
+                return;
+            }
+        }
+    }
+
 
     // delete stored messages regist of chunkId in storedMessagesReceived
     public void deleteStoreMessage(String chunkId) {
