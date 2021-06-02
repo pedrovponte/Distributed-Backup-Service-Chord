@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -472,7 +473,7 @@ public class Peer implements RemoteInterface {
 
     @Override
     public void state() {
-        /*System.out.println();
+        System.out.println();
         System.out.println("---------FILES BACKED UP---------");
         if(storage.getFilesStored() != null && !storage.getFilesStored().isEmpty()) {
             for(int i = 0; i < storage.getFilesStored().size(); i++) {
@@ -502,21 +503,48 @@ public class Peer implements RemoteInterface {
             int chunkNo = storage.getChunksStored().get(key).getChunkNo();
             int size = storage.getChunksStored().get(key).getSize();
             int desiredReplication = storage.getChunksStored().get(key).getReplication();
-            String fileId = storage.getChunksStored().get(key).getFileId();
-            String chunkId = fileId + "_" + chunkNo;
-            int perceivedReplication = storage.getPerceivedReplication(chunkId);
             System.out.println("CHUNK NO: " + chunkNo);
             System.out.println("SIZE: " + size / 1000 + " KBytes");
             System.out.println("DESIRED REPLICATION: " + desiredReplication);
-            System.out.println("PERCEIVED REPLICATION: " + perceivedReplication);
             System.out.println();
         }
         
         System.out.println();
+        System.out.println("---------PEER STORAGE---------");
         int totalCapacity = storage.getCapacity();
         int occupiedCapacity = storage.getPeerOccupiedSpace();
         System.out.println("STORAGE CAPACITY: " + totalCapacity / 1000 + " KBytes");
-        System.out.println("USED CAPACITY: " + occupiedCapacity / 1000 + " KBytes");*/
+        System.out.println("USED CAPACITY: " + occupiedCapacity / 1000 + " KBytes");
+        System.out.println("---------------------------");
+        System.out.println();
+        System.out.println();
+    }
+
+    @Override
+    public void chord() {
+        System.out.println();
+        System.out.println("---------CHORD STATUS---------");
+        System.out.println("NODE ID: " + chordNode.getNodeInfo().getNodeId());
+        System.out.println("ADDRESS: " + this.address);
+        System.out.println("PORT: " + this.tcpPort);
+        System.out.println("---------------");
+        NodeInfo predecessor = chordNode.getPredecessor();
+        System.out.println("PREDECESSOR ID: " + predecessor.getNodeId());
+        System.out.println("PREDECESSOR ADDRESS: " + predecessor.getIp());
+        System.out.println("PREDECESSOR PORT: " + predecessor.getPort());
+        System.out.println("---------------");
+        NodeInfo successor = chordNode.getSuccessor();
+        System.out.println("SUCCESSOR ID: " + successor.getNodeId());
+        System.out.println("SUCCESSOR ADDRESS: " + successor.getIp());
+        System.out.println("SUCCESSOR PORT: " + successor.getPort());
+        System.out.println("---------FINGER TABLE---------");
+        AtomicReferenceArray<NodeInfo> fingerTable = chordNode.getFingerTable();
+        for(int i = 0; i < fingerTable.length(); i++) {
+            System.out.println("FINGER " + i + ": " + fingerTable.get(i));
+        }
+        System.out.println("---------------------------");
+        System.out.println();
+        System.out.println();
     }
 
 

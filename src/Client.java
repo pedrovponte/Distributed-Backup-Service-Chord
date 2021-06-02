@@ -127,6 +127,16 @@ public class Client {
                     stub.state();
                     break;
 
+                case "CHORD":
+                    if(args.length != 2) {
+                        System.out.println("Invalid invocation for CHORD subprotocol.");
+                        System.out.println("Usage: Client <peer_ap> CHORD");
+                        return;
+                    }
+
+                    stub.chord();
+                    break;
+
                 default:
                     break;
             }

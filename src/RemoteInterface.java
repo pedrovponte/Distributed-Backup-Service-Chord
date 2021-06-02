@@ -7,4 +7,5 @@ public interface RemoteInterface extends Remote {
     void delete(String path) throws RemoteException;
     void reclaim(int maximum_disk_space) throws RemoteException;
     void state() throws RemoteException;
+    void chord() throws RemoteException;
 }

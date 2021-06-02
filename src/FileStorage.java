@@ -353,13 +353,12 @@ public class FileStorage implements java.io.Serializable {
     }
 
     public int getPerceivedReplication(String chunkId) {
-        int replication = 0;
-        for(Integer key : this.chunksDistribution.keySet()) {
-            if(this.chunksDistribution.get(key).contains(chunkId)) {
-                replication++;
+        for(String key : this.backupChunksDistribution.keySet()) {
+            if(key.equals(chunkId)) {
+                return this.backupChunksDistribution.get(key).size();
             }
         }
-        return replication;
+        return 0;
     }
 
     public void addDeletedFile(String fileId, int peerId) {
