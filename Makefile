@@ -2,7 +2,6 @@
 REP_DEG = 1
 NEW_SIZE = 0
 FILEPATH = "../../file.pdf"
-#FILEPATH = "../../thanos.gif"
 ACCESS_POINT = "Peer1"
 
 
@@ -22,20 +21,27 @@ rmi:
 kill:
 	@bash scripts/kill_rmi.sh
 
+status:
+	find src/build/peer* #ls src/build/peer* -RalS
+
 
 
 
 # PEERS
+peer:
+	cd src/build; java Peer 1.0 arg1 arg2 arg3 ......
+
 peer1:
-	cd src/build; java Peer 1.0 1 Peer1 6001
+	cd src/build; java Peer 1.0 1 Peer1 127.0.1.1 6001
 
 peer2:
-	cd src/build; java Peer 1.0 2 Peer2 6002 127.0.1.1 6001
+	cd src/build; java Peer 1.0 2 Peer2 127.0.1.2 6002 127.0.1.1 6001
 
 peer3:
-	cd src/build; java Peer 1.0 3 Peer3 6003 127.0.1.1 6002
+	cd src/build; java Peer 1.0 3 Peer3 127.0.1.3 6003 127.0.1.2 6002
 
-
+peer4:
+	cd src/build; java Peer 1.0 4 Peer4 127.0.1.4 6004 127.0.1.3 6003
 
 
 # CLIENT
@@ -53,4 +59,7 @@ reclaim:
 
 state:
 	@bash scripts/state.sh $(ACCESS_POINT)
+
+chord:
+	@bash scripts/chord.sh $(ACCESS_POINT)
 
