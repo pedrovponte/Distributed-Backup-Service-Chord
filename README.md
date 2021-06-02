@@ -23,6 +23,34 @@ make backup     # or restore/delete/reclaim/state/chord
 make status 	# show storage (optional)
 ```
 
+## Elaborate Execution
+
+```bash
+# setup
+make clean # or
+make
+make kill
+make rmi
+
+# launch peers
+bash scripts/peer.sh <protocol_version> <peer_id> <service_access_point> <ip_address> <TCP_port> [<ip_address_of_other> <TCP_port_of_other>]
+
+# execute a client operation
+bash scripts/backup.sh <peer_access_point> <filepath> <replication_degree>
+bash scripts/restore.sh <peer_access_point> <filepath>
+bash scripts/restore.sh <peer_access_point> <filepath>
+bash scripts/restore.sh <peer_access_point> <new_size>
+bash scripts/state.sh <peer_access_point>
+bash scripts/chord.sh <peer_access_point>
+
+# check storage with commands like
+# this
+find src/build/peer*
+
+# or this
+ls src/build/peer* -RalS
+```
+
 ## Makefile structure
 
 The makefile is a swift way of executing a rather complicated program.
@@ -111,34 +139,6 @@ state:
 ```
 
 This section has the commands that make client requests to the peers with the available operations. These commands use the variables defined in the [first section](#makefile-structure) of the makefile. Change them to alter the behavior of the program.
-
-## Elaborate Exceution
-
-```bash
-# setup
-make clean # or
-make
-make kill
-make rmi
-
-# launch peers
-bash scripts/peer.sh <protocol_version> <peer_id> <service_access_point> <ip_address> <TCP_port> [<ip_address_of_other> <TCP_port_of_other>]
-
-# execute a client operation
-bash scripts/backup.sh <peer_access_point> <filepath> <replication_degree>
-bash scripts/restore.sh <peer_access_point> <filepath>
-bash scripts/restore.sh <peer_access_point> <filepath>
-bash scripts/restore.sh <peer_access_point> <new_size>
-bash scripts/state.sh <peer_access_point>
-bash scripts/chord.sh <peer_access_point>
-
-# check storage with commands like
-# this
-find src/build/peer*
-
-# or this
-ls src/build/peer* -RalS
-```
 
 ## Operations
 
