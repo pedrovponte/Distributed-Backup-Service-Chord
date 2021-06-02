@@ -12,14 +12,15 @@
 To run the program with default arguments you can try
 
 ```bash
-make clean      # cleanup build directory (optional/just in case)
+make clean      # cleanup build directory (optional)
 make            # compile all java files inside src/
-make kill       # kill rmi (optional/just in case)
+make kill       # kill rmi (optional)
 make rmi        # run rmiregistry
 make peer1      # run peer1 with default arguments
 make peer2      # run peer2 with default arguments
 make peer3      # run peer2 with default arguments
 make backup     # or restore/delete/reclaim/state/chord
+make status 	# show storage (optional)
 ```
 
 ## Makefile structure
@@ -72,9 +73,6 @@ These are the commands to compile and setup your environment before executing.
 ### 3. Peers
 
 ```makefile
-peer:
-	TODO:
-
 peer1:
 	cd src/build; java Peer 1.0 1 Peer1 127.0.1.1 6001
 
@@ -117,10 +115,14 @@ This section has the commands that make client requests to the peers with the av
 ## Elaborate Exceution
 
 ```bash
-make clean
+# setup
+make clean # or
 make
 make kill
 make rmi
+
+# launch peers
+bash scripts/peer.sh <protocol_version> <peer_id> <service_access_point> <ip_address> <TCP_port> [<ip_address_of_other> <TCP_port_of_other>]
 
 # execute a client operation
 bash scripts/backup.sh <peer_access_point> <filepath> <replication_degree>
@@ -129,6 +131,13 @@ bash scripts/restore.sh <peer_access_point> <filepath>
 bash scripts/restore.sh <peer_access_point> <new_size>
 bash scripts/state.sh <peer_access_point>
 bash scripts/chord.sh <peer_access_point>
+
+# check storage with commands like
+# this
+find src/build/peer*
+
+# or this
+ls src/build/peer* -RalS
 ```
 
 ## Operations

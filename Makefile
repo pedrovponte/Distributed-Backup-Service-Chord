@@ -7,7 +7,7 @@ ACCESS_POINT = "Peer1"
 
 
 all: mkdir
-	cd src; rm -rf build/peer_*; javac -d build/ *.java
+	cd src; javac -d build/ *.java
 
 mkdir:
 	@mkdir -p src/build/
@@ -22,15 +22,12 @@ kill:
 	@bash scripts/kill_rmi.sh
 
 status:
-	find src/build/peer* #ls src/build/peer* -RalS
+	find src/build/peer* # ls src/build/peer* -RalS
 
 
 
 
 # PEERS
-peer:
-	cd src/build; java Peer 1.0 arg1 arg2 arg3 ......
-
 peer1:
 	cd src/build; java Peer 1.0 1 Peer1 127.0.1.1 6001
 
