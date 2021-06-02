@@ -253,6 +253,12 @@ public class FileStorage implements java.io.Serializable {
                 return;
             }
         }
+
+        // System.out.println("-----FILES DISTRIBUTION-------------");
+        // for(int i = 0; i < this.filesStored.size(); i++) {
+        //     System.out.println(i + ": " + this.filesStored.get(i));  
+        // }
+        // System.out.println("--------------------------");
     }
 
 
@@ -440,6 +446,21 @@ public class FileStorage implements java.io.Serializable {
         InetSocketAddress toRemove = new InetSocketAddress(address, port);
 
         this.backupChunksDistribution.get(chunkId).remove(toRemove);
+    }
+
+    public void removeBackupChunksDistribution(String fileId) {
+        for(ConcurrentHashMap.Entry<String, ArrayList<InetSocketAddress>> set : this.backupChunksDistribution.entrySet()) {
+            String fId = set.getKey().split("_")[0];
+            if(fId.equals(fileId)) {
+                this.backupChunksDistribution.remove(set.getKey());
+            }
+        }
+
+        // System.out.println("-----BACKUP CHUNKS DISTRIBUTION-------------");
+        // for(String key : this.backupChunksDistribution.keySet()) {
+        //     System.out.println(key + ": " + this.backupChunksDistribution.get(key));  
+        // }
+        // System.out.println("--------------------------");
     }
 }
 

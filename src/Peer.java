@@ -364,18 +364,27 @@ public class Peer implements RemoteInterface {
             return;
         }
 
-        FileManager fileManager = new FileManager(path, peerId);
-        String fileID = fileManager.getFileID();
-        ArrayList<Chunk> fileChunks = fileManager.getFileChunks();
         ArrayList<FileManager> files = getStorage().getFilesStored();
         ArrayList<String> filesNames = new ArrayList<>();
 
-        // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
+        for(int i = 0; i < files.size(); i++) {
+            filesNames.add(files.get(i).getPath());
+        }
+
+        if(!filesNames.contains(path)){
+            System.out.println("File " + path + " never backed up in this peer");
+            return;
+        }
+
+        FileManager fileManager = new FileManager(path, peerId);
+        String fileID = fileManager.getFileID();
         ArrayList<Chunk> chunks = fileManager.getFileChunks();
+
+        // This message does not elicit any response message. An implementation may send this message as many times as it is deemed necessary
         for (Chunk chunk : chunks) {
             for(int i = 0; i < 5; i++) {
                 MessageBuilder messageBuilder = new MessageBuilder();
-                byte[] message = messageBuilder.constructDeleteMessage(peer.getAddress().getHostAddress(), peer.getTcpPort(), fileID, chunk.getChunkNo());
+                byte[] message = messageBuilder.constructDeleteMessage(peer.getAddress().getHostAddress(), peer.getTcpPort(), fileID);
 
                 try {
                     //send delete message
@@ -392,7 +401,18 @@ public class Peer implements RemoteInterface {
             }
         }
 
-        if(!filesNames.contains(path)) return;
+        ConcurrentHashMap<String,Integer> storedMessages = getStorage().getStoredMessagesReceived();
+        for(String key : storedMessages.keySet()) {
+            for(int k = 0; k < fileManager.getFileChunks().size(); k++) {
+                String chunkId = fileManager.getFileID() + "_" + k;
+                if(key.equals(chunkId)) {
+                    getStorage().deleteStoreMessage(chunkId);
+                }
+            }
+        }
+
+        getStorage().removeBackupChunksDistribution(fileManager.getFileID());
+
         getStorage().deleteFile(fileManager); //apagar ficheiro local
     }
 
@@ -447,56 +467,6 @@ public class Peer implements RemoteInterface {
                 }
             }
         }        
-
-
-
-        /*int max_space = maximum_disk_space * 1000;
-
-        storage.setCapacity(max_space);
-
-        int occupiedSpace = storage.getPeerOccupiedSpace();
-
-        int spaceToFree = occupiedSpace - max_space;
-
-        if(spaceToFree > 0) {
-            ConcurrentHashMap<String, storage.Chunk> chunksStored = this.getStorage().getChunksStored();
-            ArrayList<storage.Chunk> chunks = new ArrayList<>();
-
-            for(String key : chunksStored.keySet()) {
-                chunks.add(chunksStored.get(key));
-            }
-
-            // descendant ordered list to start delete biggest chunks first
-            Collections.sort(chunks, Comparator.comparing(storage.Chunk::getSize));
-            Collections.reverse(chunks);
-
-            for(int i = 0; i < chunks.size(); i++) {
-                String chunkId = chunks.get(i).getFileId() + "_" + chunks.get(i).getChunkNo();
-                storage.deleteChunk(chunkId);
-
-                String message = this.protocolVersion + " REMOVED " + peerId + " " + chunks.get(i).getFileId() + " " + chunks.get(i).getChunkNo() + " \r\n\r\n";
-                try {
-                    this.threadExec.execute(new broadcast.ThreadSendMessages(this.MC, message.getBytes(StandardCharsets.US_ASCII)));
-
-                    System.out.println("SENT: " + message);
-                } catch (Exception e) {
-                    System.err.println(e.getMessage());
-                    e.printStackTrace();
-                }
-
-                spaceToFree -= chunks.get(i).getSize();
-
-                String name = "peer_" + peerId + "/backup/" + chunkId;
-
-                File filename = new File(name);
-
-                filename.delete();
-
-                if(spaceToFree <= 0) {
-                    return;
-                }
-            }
-        }*/
     }
 
 

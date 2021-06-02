@@ -8,7 +8,6 @@ public class DeleteMessageThread implements Runnable {
     private String address;
     private int port;
     private String fileId;
-    private int chunkNo;
     private String protocolVersion;
 
     public DeleteMessageThread(Message message) {
@@ -18,15 +17,12 @@ public class DeleteMessageThread implements Runnable {
         this.address = header[3];
         this.port = Integer.parseInt(header[4]);
         this.fileId = header[5];
-        this.chunkNo = Integer.parseInt(header[6]);
         this.protocolVersion = header[0];
     }
 
     @Override
     public void run() {
-        System.out.println("RECEIVED: " + this.protocolVersion + " DELETE " + this.senderId + " " + this.address + " " + this.port + " " + this.fileId + " " + this.chunkNo);
-        String path = "peer_" + Peer.getPeerId() + "/backup/"+ this.fileId + "_" + this.chunkNo;
-        //System.out.println("PATH: "+ path);
+        System.out.println("RECEIVED: " + this.protocolVersion + " DELETE " + this.senderId + " " + this.address + " " + this.port + " " + this.fileId);
 
         ConcurrentHashMap<String, Chunk> chunks = Peer.getStorage().getChunksStored();
 
@@ -34,6 +30,8 @@ public class DeleteMessageThread implements Runnable {
             Chunk chunk = chunks.get(key);
             if(chunk.getFileId().equals(this.fileId)) {
                 Peer.getStorage().deleteChunk(key);
+                String path = "peer_" + Peer.getPeerId() + "/backup/" + key;
+                //System.out.println("PATH: "+ path);
                 File filename = new File(path);
                 filename.delete();
             }
