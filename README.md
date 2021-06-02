@@ -1,9 +1,14 @@
 # Backup Service for the Internet (SDIS P2)
 
-- [Simple Execution](#simple-execution)
-- [Elaborate Execution](#elaborate-execution)
-- [Makefile Structure](#makefile-structure)
-- [Operations](#operations)
+- [Backup Service for the Internet (SDIS P2)](#backup-service-for-the-internet-sdis-p2)
+	- [Simple Execution](#simple-execution)
+	- [Elaborate Execution](#elaborate-execution)
+	- [Makefile structure](#makefile-structure)
+		- [1. Global default variables](#1-global-default-variables)
+		- [2. Compile and setup](#2-compile-and-setup)
+		- [3. Peers](#3-peers)
+		- [4. Client](#4-client)
+	- [Operations](#operations)
 
 <br>
 
@@ -118,6 +123,9 @@ This is the section with the commands to launch peers into the program.
 
 - The `peer` option allows you to launch a peer with your own arguments
 - The `peer<N>` option (where `N` is the `peerID`) allows to launch a peer with the default values presented. Suitable for simple test runs. If you want more than 4 of these commands copy the last one and create the next `peerN`.
+- Initiate peers without makefile or scripts:
+  - First peer to join the Chord ring: `java Peer <protocol_version> <peer_id> <service_access_point> <ip_address> <TCP_port>`
+  - Initiate the other peers: `java Peer <protocol_version> <peer_id> <service_access_point> <ip_address> <TCP_port> <ip_address_of_other> <TCP_port_of_other>`
 
 ### 4. Client
 
@@ -147,13 +155,19 @@ This section has the commands that make client requests to the peers with the av
 
 - Backup:
   - Peer asks to save chunks of file on other peers with a replication degree
+  - java Client <peer_ap> BACKUP <file_path_name> <replication_degree>
 - Restore
   - Peer asks to retrieve the backed up chunks of the file previously backed up
+  - java Client <peer_ap> RESTORE <file_path_name>
 - Delete
   - Peer asks to delete the previously backed up file
+  - java Client <peer_ap> DELETE <file_path_name>
 - Reclaim
   - Client decides to change the space available for a given peer
+  - java Client <peer_ap> RECLAIM <maximum_disk_space_KB>
 - State
   - Shows information about the peer and its storage
+  - java Client <peer_ap> STATE
 - Chord
   - Log information Chord related
+  - java Client <peer_ap> CHORD
