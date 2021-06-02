@@ -39,7 +39,6 @@ public class GetChunkMessageThread implements Runnable {
 
         byte[] body = chunksStored.get(chunkId).getChunkMessage(); // chamada do message builder e depois envia
 
-        //TODO contar os chunks recebidos
         MessageBuilder messageBuilder = new MessageBuilder();
         byte[] message = messageBuilder.constructChunkMessage(
             Peer.getChordNode().getNodeInfo().getSocketAddress().getAddress().getHostAddress(),

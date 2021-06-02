@@ -31,10 +31,6 @@ public class ManageRestoreThread implements Runnable {
 
 
             if(fileChunks.size() != chunksNumber) {
-                //System.out.println(fileChunks.size() + " | " + chunksNumber);
-                //System.out.println("ERROR: Not all file chunks have been restored");
-                //threadExec.execute(new ThreadSendMessages(set.getValue().get(j).getAddress().getHostAddress(), set.getValue().get(j).getPort(), message));
-
                 if(n >= 10) {
                     Peer.getStorage().deleteFileRestored(this.fileManager.getFileID());
                     Peer.getStorage().deleteChunksRestored(this.fileManager.getFileID());

@@ -136,6 +136,9 @@ reclaim:
 
 state:
 	@bash scripts/state.sh $(ACCESS_POINT)
+
+chord:
+	@bash scripts/chord.sh $(ACCESS_POINT)
 ```
 
 This section has the commands that make client requests to the peers with the available operations. These commands use the variables defined in the [first section](#makefile-structure) of the makefile. Change them to alter the behavior of the program.
@@ -151,4 +154,6 @@ This section has the commands that make client requests to the peers with the av
 - Reclaim
   - Client decides to change the space available for a given peer
 - State
-  - Shows information about one peer and its storage
+  - Shows information about the peer and its storage
+- Chord
+  - Log information Chord related
